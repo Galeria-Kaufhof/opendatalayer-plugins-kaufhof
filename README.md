@@ -4,8 +4,11 @@ that are not universally applicable. Before they can become universal ODL plugin
 the issues and make them more generalized.
 
 ## Usage
-The plugins should be used together with ODL Builder. Install them as a local npm dependency and directly
-reference them in your ODL Builder configuration like this:
+The plugins should be used together with ODL Builder. Install them as a local npm dependency. 
+
+    npm install opendatalayer-plugins-kaufhof --save-dev
+
+Then you can directly reference them in your ODL Builder configuration like this:
 
 ```javascript
 odlBuilder.configure({
@@ -17,5 +20,5 @@ odlBuilder.configure({
 })
 ```
 
-All this is necessary because of the poor ES6 module support in node. As soon as the support becomes native,
-we can get rid of many ES6->ES5 transpilation workarounds that are currently used throughout the ODL project.
+*NOTE: All existing hacks are necessary because of the poor ES6 module support in node. As soon as the support becomes native,
+we can get rid of many ES6->ES5 transpilation workarounds that are currently used throughout the ODL project.*
