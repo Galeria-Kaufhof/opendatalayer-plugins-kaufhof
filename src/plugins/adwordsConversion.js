@@ -1,6 +1,6 @@
 import { window, Logger } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/odl/adwordsConversion');
+const logger = new Logger('adwordsConversion');
 
 /**
  * Google Adwords Conversion pixel ODL plugin

@@ -1,69 +1,67 @@
 import { describe, it, beforeEach } from 'mocha';
-import { assert } from 'chai';
 import * as sinon from 'sinon';
 import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import mockModule from 'systemjs-mock-module';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import jsdom from 'jsdom';
+import './../systemjs.config';
 
-describe('ba/lib/dal/aff/adwordsConversion', () => {
-  let [window, Service, loggerSpy, dalApi, dalDataMock, dalConfigMock] = [];
+describe('opendatalayer-plugins-kaufhof/adwordsConversion', () => {
+  let [odlMock, Service, loggerSpy, odlApi, odlDataMock, odlConfigMock] = [];
 
-  beforeEach((done) => {
+  beforeEach(() => {
     // spies
-    window = {
-      location: { protocol: 'https:' },
-      require: sinon.stub().callsArg(1),
-      google_trackConversion: sinon.stub(),
+    odlMock = {
+      window: jsdom.jsdom('<html><body></body></html>').defaultView,
+      Logger: () => loggerSpy,
+      helpers: { addScript: sinon.spy() },
     };
-    loggerSpy = {
-      log: sinon.spy(),
-      warn: sinon.spy(),
-    };
+    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
+    odlMock.window.require = sinon.stub().callsArg(1);
+    odlMock.window.google_trackConversion = sinon.stub();
     // mock data
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub('checkout-confirmation');
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub();
-    dalConfigMock = {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub('checkout-confirmation');
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub();
+    odlConfigMock = {
       conversionId: 123456789,
       conversionLabel: 'bla123Blubb',
       conversionCurrency: 'MY$',
     };
     // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
+    mockModule(System, 'opendatalayer', odlMock);
     // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/aff/adwordsConversion'));
-    System.import('ba/lib/dal/aff/adwordsConversion').then(m => {
+    System.delete(System.normalizeSync('./src/plugins/adwordsConversion'));
+    return System.import('./src/plugins/adwordsConversion').then((m) => {
       Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    }).catch(err => console.error(err));
   });
 
   it('should lazy-load the global googleadservices script', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window.require, ['https://www.googleadservices.com/pagead/conversion_async.js']);
+    jsdom.changeURL(odlMock.window, 'https://example.com/someurl.foo'); // force https protocol!
+    new Service(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(odlMock.window.require, ['https://www.googleadservices.com/pagead/conversion_async.js']);
   });
 
   it('should define the static globals', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window.google_trackConversion, sinon.match({
-      google_conversion_id: dalConfigMock.conversionId,
-      google_conversion_label: dalConfigMock.conversionLabel,
+    new Service(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(odlMock.window.google_trackConversion, sinon.match({
+      google_conversion_id: odlConfigMock.conversionId,
+      google_conversion_label: odlConfigMock.conversionLabel,
       google_remarketing_only: false,
       google_conversion_format: 3,
-      google_conversion_currency: dalConfigMock.conversionCurrency,
+      google_conversion_currency: odlConfigMock.conversionCurrency,
     }));
   });
 
   it("should track the correct conversion value if the pageType is 'checkout-confirmation'", () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window.google_trackConversion, sinon.match({ google_conversion_value: dalDataMock.order.priceData.total }));
+    new Service(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(odlMock.window.google_trackConversion, sinon.match({ google_conversion_value: odlDataMock.order.priceData.total }));
   });
 
   it("should not track anything if the pageType isnt 'checkout-confirmation'", () => {
-    dalDataMock.page.type = 'someotherpage';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.notCalled(window.google_trackConversion);
+    odlDataMock.page.type = 'someotherpage';
+    new Service(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.notCalled(odlMock.window.google_trackConversion);
   });
 });
