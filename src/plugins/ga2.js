@@ -1,18 +1,13 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
+import { window, Logger } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/ga2');
+const logger = new Logger('ba/lib/odl/ga2');
 
 /**
- * Google Analytics pixel DAL plugin
- *
- * @module   ba.lib.dal.ga2
- * @class    GoogleAnalytics2
- * @implements  IDALService
+ * Google Analytics pixel ODL plugin.
  */
 export default class GoogleAnalytics2 {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize', config);
     this.config = config;
 

@@ -1,26 +1,22 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
+/* eslint-disable no-underscore-dangle */
+import { window, Logger } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/tharuka');
+const logger = new Logger('tharuka');
 
 /**
- * Tharuka DAL plugin
- *
- * @module   gk.lib.dal
- * @class    tharuka
- * @implements  IDALService
+ * Tharuka ODL plugin
  */
 export default class Tharuka {
 
   /**
-   * Fired when the plugin is loaded by the DAL (during or after DOM load)
+   * Fired when the plugin is loaded by the ODL (during or after DOM load)
    *
    * @method constructor
-   * @param  {gk.lib.DAL}  dal     the global DAL instance
-   * @param  {Object}      data    the global DAL data object (as returned by DAL.getData)
-   * @param  {Object}      config  custom configuration for this service
+   * @param  {ODL}     odl     the global ODL instance
+   * @param  {Object}  data    the global ODL data object (as returned by ODL.getData)
+   * @param  {Object}  config  custom configuration for this service
    */
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     const ordr = data.order;
     const cus = ordr.customer;
     const addr = cus.billingAddress;

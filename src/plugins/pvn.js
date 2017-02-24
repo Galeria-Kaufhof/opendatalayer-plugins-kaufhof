@@ -1,24 +1,19 @@
+import { Logger, helpers } from 'opendatalayer';
 import $ from 'jquery';
-import Logger from 'gk/lib/logger';
-import * as pixelHelper from '../../pixelHelper';
 
-const logger = new Logger('ba/lib/dal/bt/affilinet');
+const logger = new Logger('ba/lib/odl/bt/affilinet');
 
 /**
- * PVN pixel DAL plugin
- *
- * @module   ba.lib.dal.bt.pvn
- * @class    PVN
- * @implements  IDALService
+ * PVN pixel ODL plugin
  */
 export default class PVN {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
 
     if (data.page.type === 'checkout-confirmation') {
       // order pixel
-      pixelHelper.addScript(`https://partnerprogramm.galeria-kaufhof.de/trck/etrack/?campaign_id=1&trigger_id=1&token=${data.order.id}&descr=&currency=${config.currency}&turnover=${data.order.priceData.net}&vc=${data.order.couponCode}&t=js`);
+      helpers.addScript(`https://partnerprogramm.galeria-kaufhof.de/trck/etrack/?campaign_id=1&trigger_id=1&token=${data.order.id}&descr=&currency=${config.currency}&turnover=${data.order.priceData.net}&vc=${data.order.couponCode}&t=js`);
 
       // START EASY AFFILIATE
       const orderId = data.order.id;

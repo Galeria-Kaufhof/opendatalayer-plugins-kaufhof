@@ -1,20 +1,14 @@
 /* eslint-disable no-underscore-dangle */
-import Logger from 'gk/lib/logger';
-import window from 'gk/globals/window';
-import pixelHelper from '../../pixelHelper';
+import { window, Logger, helpers } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/bt/shoppingcom');
+const logger = new Logger('shoppingcom');
 
 /**
- * Shopping.com DAL plugin
- *
- * @module   ba.lib.dal.bt.shoppingcom
- * @class    ShoppingCOM
- * @implements  IDALService
+ * Shopping.com ODL plugin
  */
 export default class ShoppingCOM {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
 
     if (data.page.type === 'checkout-confirmation') {
@@ -36,7 +30,7 @@ export default class ShoppingCOM {
       _roi.push(['_trackTrans']);
       window._roi = _roi;
 
-      pixelHelper.addScript('//stat.dealtime.com/ROI/ROI2.js');
+      helpers.addScript('//stat.dealtime.com/ROI/ROI2.js');
     }
   }
 }

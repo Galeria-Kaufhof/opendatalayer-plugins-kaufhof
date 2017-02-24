@@ -1,19 +1,13 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
-import * as pixelHelper from './../../pixelHelper';
+import { window, Logger, helpers } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/aff/riskIdent');
+const logger = new Logger('riskIdent');
 
 /**
- * Device Ident DAL plugin
- *
- * @module   ba.lib.dal.aff.riskIdent
- * @class    RiskIdent
- * @implements  IDALService
+ * Device Ident ODL plugin.
  */
 export default class RiskIdent {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
 
     if (data.page.type !== 'checkout-confirmation') {
@@ -29,8 +23,8 @@ export default class RiskIdent {
       l: 'Checkout',
     };
 
-    pixelHelper.addScript(`//www.jsctool.com/${diSite}/di.js`);
-    pixelHelper.addHTML('BODY', `<object type="application/x-shockwave-flash" data="//www.jsctool.com/${diSite}/c.swf" width="0" height="0"><param name="movie" value="//www.jsctool.com/${diSite}/c.swf" /><param name="flashvars" value="t=${token}&v=${diSite}"/></object>`);
-    pixelHelper.addHTML('BODY', `<link rel="stylesheet" type="text/css" media="jsctool" href="//media1.galeria-kaufhof.de/di.css?t=${token}&sd=1&v=${diSite}&l=Checkout">`);
+    helpers.addScript(`//www.jsctool.com/${diSite}/di.js`);
+    helpers.addHTML('BODY', `<object type="application/x-shockwave-flash" data="//www.jsctool.com/${diSite}/c.swf" width="0" height="0"><param name="movie" value="//www.jsctool.com/${diSite}/c.swf" /><param name="flashvars" value="t=${token}&v=${diSite}"/></object>`);
+    helpers.addHTML('BODY', `<link rel="stylesheet" type="text/css" media="jsctool" href="//media1.galeria-kaufhof.de/di.css?t=${token}&sd=1&v=${diSite}&l=Checkout">`);
   }
 }

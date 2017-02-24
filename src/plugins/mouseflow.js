@@ -1,13 +1,12 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
+import { window, Logger } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/mouseflow');
+const logger = new Logger('mouseflow');
 
 export default class Mouseflow {
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
 
-    // setup MF globals (TODO use @config)
+    // setup MF globals
     window.mouseflowDisableKeyLogging = config.mouseflowDisableKeyLogging || true;
 
     // include Mouseflow

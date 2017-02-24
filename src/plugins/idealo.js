@@ -1,17 +1,13 @@
-import Logger from 'gk/lib/logger';
+import { Logger } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/bt/idealo');
+const logger = new Logger('idealo');
 
 /**
- * Idealo DAL plugin, simply displays idealo notice on checkout-confirmation page
- *
- * @module   ba.lib.dal.bt.idealo
- * @class    Idealo
- * @implements  IDALService
+ * Idealo ODL plugin, simply displays idealo notice on checkout-confirmation page.
  */
 export default class Idealo {
 
-  constructor(dal, data) {
+  constructor(odl, data) {
     logger.log('initialize');
 
     if (data.page.type === 'checkout-confirmation') {

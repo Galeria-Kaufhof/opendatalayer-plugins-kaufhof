@@ -1,19 +1,14 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
+import { window, Logger } from 'opendatalayer';
 // import 'https://www.googleadservices.com/pagead/conversion_async.js';
 
-const logger = new Logger('ba/lib/dal/aff/googleRemarketing');
+const logger = new Logger('googleRemarketing');
 
 /**
- * GoogleRemarketing pixel DAL plugin
- *
- * @module   ba.lib.dal.aff.googleRemarketing
- * @class    GoogleRemarketing
- * @implements  IDALService
+ * GoogleRemarketing pixel ODL plugin.
  */
 export default class GoogleRemarketing {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
     // @TODO use System.import once systemjs is globally available
     window.require([`${window.location.protocol}//www.googleadservices.com/pagead/conversion_async.js`], () => {

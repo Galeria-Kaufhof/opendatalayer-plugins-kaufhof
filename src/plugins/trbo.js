@@ -1,23 +1,20 @@
 /* eslint-disable no-underscore-dangle */
-import window from 'gk/globals/window';
-import gkConfig from 'gk/lib/config';
-//import Logger from 'gk/lib/logger';
-import * as pixelHelper from './../pixelHelper';
+import { window, Logger, helpers } from 'opendatalayer';
 
-//const logger = new Logger('ba/lib/dal/trbo');
+//const logger = new Logger('ba/lib/odl/trbo');
 
 export default class Trbo {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     //logger.log('initialize');
 
-    // disable in FOC/App cases
-    if (gkConfig.focMode || gkConfig.isAppContext) {
-      return;
-    }
+    // disable in FOC/App cases (@TODO: put in rule in ODL config)
+    //if (gkConfig.focMode || gkConfig.isAppContext) {
+    //  return;
+    //}
 
     // add trbo script
-    pixelHelper.addScript(config.scriptUrl);
+    helpers.addScript(config.scriptUrl);
 
     const _trboq = window._trboq || [];
     let pt = '';
@@ -49,7 +46,7 @@ export default class Trbo {
         _trboq.push(['basket', {
           // coupon_code: data.cart.couponCode,
           value: data.cart.priceData.total,
-          products: this.buildProductsFromDAL(data.cart.products),
+          products: this.buildProductsFromODL(data.cart.products),
         }]);
         break;
       case 'checkout-confirmation': {
@@ -58,7 +55,7 @@ export default class Trbo {
           order_id: data.order.id,
           coupon_code: data.order.couponCode,
           value: data.order.priceData.total,
-          products: this.buildProductsFromDAL(data.order.products),
+          products: this.buildProductsFromODL(data.order.products),
         }]);
         break;
       }
@@ -78,8 +75,8 @@ export default class Trbo {
     }
   }
 
-  buildProductsFromDAL(dalProducts) {
-    return dalProducts.map((p) => {
+  buildProductsFromODL(odlProducts) {
+    return odlProducts.map((p) => {
       return {
         product_id: p.aonr,
         name: p.name,

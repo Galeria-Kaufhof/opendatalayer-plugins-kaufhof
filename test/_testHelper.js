@@ -21,8 +21,9 @@ export function setupModule(name) {
 /**
  * Init and return object with mocks (ODL, logger, ...). Also registers
  * ODL mock with SystemJS.
+ * @param mapping {Object}  (optional) additional mocks, provided as { 'module_id': mock_object }
  */
-export function initMocks() {
+export function initMocks(mapping = {}) {
   // spies
   const loggerSpy = { log: sinon.spy(), warn: sinon.spy(), error: sinon.spy() };
   const mocks = {
@@ -36,7 +37,12 @@ export function initMocks() {
   };
   // register ODL mock within system
   mockModule(System, 'opendatalayer', mocks.odl);
-
+  // register additional mocks
+  for (const m in mapping) {
+    if (mapping.hasOwnProperty(m)) {
+      mockModule(System, m, mapping[m]);
+    }
+  }
   return mocks;
 }
 

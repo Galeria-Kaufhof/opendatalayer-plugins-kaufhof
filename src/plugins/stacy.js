@@ -1,27 +1,22 @@
 /* eslint-disable no-underscore-dangle, no-bitwise, max-len */
-import window from 'gk/globals/window';
-import mq from 'gk/lib/mediaQuery';
-import Logger from 'gk/lib/logger';
-import config from 'gk/lib/config';
-import stacy from './../stacy';
+import { window, Logger } from 'opendatalayer';
+/* eslint-disable no-underscore-dangle, no-bitwise, max-len */
+// @TODO import mq from 'gk/lib/mediaQuery';
+// @TODO import stacy from './../lib/stacy';
 
 /**
- * stacy DAL plugin
+ * stacy ODL plugin
  *
  * Includes stacy logging library and hands over specific data to logging backend.
  *
  * @TODO
  * - connect with trafficbroker and log traffic sources
  * - log breakpoint changes by listening to mq.change
- *
- * @module   gk.lib.dal
- * @class    stacy
- * @implements  IDALService
  */
-const logger = new Logger('ba/lib/dal/stacy');
+const logger = new Logger('stacy');
 
-// provide DAL data to metrics
-let _dalData = {};
+// provide ODL data to metrics
+let _odlData = {};
 
 // stacy metric for fint-specific KPIs
 const FintPageMetric = {
@@ -31,13 +26,13 @@ const FintPageMetric = {
     // mq.on "change", (breakpoint) ->
     //   stacy.log "BreakPointChange", breakpoint
     const data = {
-      Breakpoint: mq.currentRange,
+      // Breakpoint: mq.currentRange,
       PageLocation: window.location.pathname + window.location.search,
-      PageType: _dalData.page.type,
-      PageName: _dalData.page.name,
-      SiteId: _dalData.site.id,
-      bid: _dalData.identity.bid,
-      tenantId: config.tenantId,
+      PageType: _odlData.page.type,
+      PageName: _odlData.page.name,
+      SiteId: _odlData.site.id,
+      bid: _odlData.identity.bid,
+      // tenantId: config.tenantId,
       Referrer: document.referrer,
     };
     // if we have custom rum events, log them
@@ -52,20 +47,20 @@ const FintPageMetric = {
 export default class Stacy {
 
   /**
-   * Fired when the plugin is loaded by the DAL (during or after DOM load)
+   * Fired when the plugin is loaded by the ODL (during or after DOM load)
    *
    * @method constructor
-   * @param  {gk.lib.DAL}  dal     the global DAL instance
-   * @param  {Object}      data    the global DAL data object (as returned by DAL.getData)
+   * @param  {gk.lib.ODL}  odl     the global ODL instance
+   * @param  {Object}      data    the global ODL data object (as returned by ODL.getData)
    * @param  {Object}      config  custom configuration for this service
    */
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     this._onPostData = this._onPostData.bind(this);
-    this.dal = dal;
+    this.odl = odl;
     this.data = data;
     logger.log('initialize');
-    // make DAL data available to metrics
-    _dalData = this.data;
+    // make ODL data available to metrics
+    _odlData = this.data;
     // init stacy
     stacy.init({
       backend: '/fintlog',
@@ -85,7 +80,7 @@ export default class Stacy {
 
   /**
    * Capture all async events and send them to stacy.
-   * @TODO add loglevel argument to DAL
+   * @TODO add loglevel argument to ODL
    */
   handleEvent(name, data, domain) {}
     // pass log event to stacy

@@ -1,22 +1,18 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
-import * as pixelHelper from './../../pixelHelper';
-
-const logger = new Logger('ba/lib/dal/aff/sovendus');
+import { window, helpers } from 'opendatalayer';
 
 /**
- * Sovendus DAL plugin
+ * Sovendus ODL plugin
  *
- * @module   ba.lib.dal
+ * @module   ba.lib.odl
  * @class    Sovendus
- * @implements  IDALService
+ * @implements  IODLService
  */
 export default class Sovendus {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     if (data.page.type === 'checkout-confirmation') {
       // create target element in container on confirmation page
-      pixelHelper.addHTML('#or-page__confirmation__sovendus', '<div id="gutscheinconnection-container1" />');
+      helpers.addHTML('#or-page__confirmation__sovendus', '<div id="gutscheinconnection-container1" />');
 
       // configure Sovendus
       const gd = window._gconData || [];
@@ -38,7 +34,7 @@ export default class Sovendus {
       window._gconData = gd;
 
       // build/add script include
-      pixelHelper.addScript('//api.gutscheinconnection.de/js/client.js');
+      helpers.addScript('//api.gutscheinconnection.de/js/client.js');
     }
   }
 }

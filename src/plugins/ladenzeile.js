@@ -1,19 +1,13 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
-import * as pixelHelper from '../../pixelHelper';
+import { window, Logger, helpers } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/bt/ladenzeile');
+const logger = new Logger('ladenzeile');
 
 /**
- * Ladenzeile DAL plugin
- *
- * @module   ba.lib.dal.bt.ladenzeile
- * @class    Ladenzeile
- * @implements  IDALService
+ * Ladenzeile ODL plugin.
  */
 export default class Ladenzeile {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
 
     if (data.page.type === 'checkout-confirmation') {
@@ -28,7 +22,7 @@ export default class Ladenzeile {
       };
 
       // add script
-      pixelHelper.addScript('//www.ladenzeile.de/controller/visualMetaTrackingJs');
+      helpers.addScript('//www.ladenzeile.de/controller/visualMetaTrackingJs');
     }
   }
 }

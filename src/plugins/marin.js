@@ -1,19 +1,13 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
-import * as pixelHelper from './../../pixelHelper';
+import { window, Logger, helpers } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/aff/marin');
+const logger = new Logger('marin');
 
 /**
- * Marin Conversion pixel DAL plugin
- *
- * @module   ba.lib.dal.aff.marin
- * @class    Marin
- * @implements  IDALService
+ * Marin Conversion pixel ODL plugin.
  */
 export default class Marin {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
 
     window._mTrack = window._mTrack || [];
@@ -34,6 +28,6 @@ export default class Marin {
     }
 
     // send tracking request
-    pixelHelper.addScript(`//tracker.marinsm.com/tracker/async/${config.accountId}.js`, false);
+    helpers.addScript(`//tracker.marinsm.com/tracker/async/${config.accountId}.js`, false);
   }
 }

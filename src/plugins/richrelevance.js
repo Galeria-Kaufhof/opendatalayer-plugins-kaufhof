@@ -1,31 +1,28 @@
+import { window, Logger } from 'opendatalayer';
+
 import $ from 'jquery';
-import Logger from 'gk/lib/logger';
-import window from 'gk/globals/window';
 // import '//media.richrelevance.com/rrserver/js/1.0/p13n.js';
 
-const logger = new Logger('ba/lib/dal/richrelevance');
+const logger = new Logger('richrelevance');
 
 /**
- * richrelevance DAL plugin
+ * richrelevance ODL plugin
  *
- * DAL service plugin for embedding richrelevance into the page. Also responsible for
+ * ODL service plugin for embedding richrelevance into the page. Also responsible for
  * replacing gk:recommendation meta tags with actual recommendation markup.
- *
- * @module gk.lib.dal
- * @class  richrelevance
  */
 export default class Richrelevance {
 
   /**
-   * Init callback, fired when the plugin is loaded by the DAL (during or after DOM load)
+   * Init callback, fired when the plugin is loaded by the ODL (during or after DOM load)
    *
    * @method constructor
-   * @param  {gk.lib.DAL}  dal     the global DAL instance
-   * @param  {Object}      data    the global DAL data object (as returned by DAL.getData)
+   * @param  {gk.lib.ODL}  odl     the global ODL instance
+   * @param  {Object}      data    the global ODL data object (as returned by ODL.getData)
    * @param  {Object}      config  custom configuration for this service
    */
-  constructor(dal, data, config) {
-    this.dal = dal;
+  constructor(odl, data, config) {
+    this.odl = odl;
     this.data = data;
     this.config = config;
     this.placements = {}; // object with placmement data and callbacks for each placmement id
@@ -107,7 +104,7 @@ export default class Richrelevance {
               window.R3_SEARCH.addItemId(id);
             }
           } else {
-            logger.log('search.ids not present in DAL');
+            logger.log('search.ids not present in ODL');
           }
           break;
         case 'category':
@@ -192,7 +189,7 @@ export default class Richrelevance {
   }
 
   /**
-   * Event handling callback, processes asynchronous events sent by the DAL.
+   * Event handling callback, processes asynchronous events sent by the ODL.
    *
    * @method handleEvent
    * @param  {String}  name  name/type of the event

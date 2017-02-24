@@ -1,21 +1,20 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
+import { Logger, window } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/dal/bt/mybestbrands');
+const logger = new Logger('mybestbrands');
 
 // NOTE: mybestbrands got no unit test, due to the completely stupid script block
 // they supply to their customers
 
 /**
- * mybestbrands DAL plugin
+ * mybestbrands ODL plugin
  *
- * @module   ba.lib.dal.bt.mybestbrands
+ * @module   ba.lib.odl.bt.mybestbrands
  * @class    MyBestBrands
- * @implements  IDALService
+ * @implements  IODLService
  */
 export default class MyBestBrands {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
 
     if (data.page.type === 'checkout-confirmation') {

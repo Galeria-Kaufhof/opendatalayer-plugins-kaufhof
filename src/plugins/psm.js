@@ -1,19 +1,14 @@
-import window from 'gk/globals/window';
-import Logger from 'gk/lib/logger';
-import A3320 from 'ba/vendor/A3320_tracking';
+import { window, Logger } from 'opendatalayer';
+import A3320 from './../lib/A3320_tracking';
 
-const logger = new Logger('ba/lib/dal/bt/psm');
+const logger = new Logger('ba/lib/odl/bt/psm');
 
 /**
- * PSM DAL plugin
- *
- * @module   ba.lib.dal.bt.psm
- * @class    PSM
- * @implements  IDALService
+ * PSM ODL plugin
  */
 export default class PSM {
 
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
 
     if (data.page.type === 'checkout-confirmation') {
