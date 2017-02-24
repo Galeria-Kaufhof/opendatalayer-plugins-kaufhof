@@ -1,6 +1,6 @@
-import { window, Logger, cookie } from 'opendatalayer';
+import { window, Logger } from 'opendatalayer';
 
-import econda from '../lib/econda';
+import '../lib/econda';
 
 // TODO: fix mediaQuery dep
 // import mediaQuery from 'gk/lib/mediaQuery';
@@ -196,7 +196,7 @@ export default class Econda {
     };
 
     // pass custom dimensions
-    o.breakpointc = mediaQuery.currentRange;  // https://jira.gkh-setu.de/browse/BSNA-1069
+    // @FIXME: o.breakpointc = mediaQuery.currentRange;  // https://jira.gkh-setu.de/browse/BSNA-1069
     o.status = this.data.user && this.data.user.id ? 'loggedIn' : 'notLoggedIn';  // https://jira.gkh-setu.de/browse/BSNA-1068
 
     // app case: see https://jira.gkh-setu.de/browse/BSNA-797 for details
