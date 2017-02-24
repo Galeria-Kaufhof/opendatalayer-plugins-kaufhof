@@ -1,0 +1,22 @@
+{
+  "extends": "airbnb-base",
+  "parserOptions": {
+    "ecmaVersion": 6
+  },
+  "env": {
+    "es6": true,
+    "node": true,
+    "browser": true,
+    "amd": true
+  },
+  "globals": {},
+  "rules": {
+    "import/no-extraneous-dependencies": 0,
+    "import/no-unresolved": [2],
+    "no-underscore-dangle": ["off"],
+    "no-param-reassign": ["error", { "props": false }],
+    "global-require": 0,
+    "max-len": ["error", 200],
+    "no-new": ["off"]
+  }
+}
