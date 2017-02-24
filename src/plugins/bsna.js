@@ -1,13 +1,11 @@
-import window from 'gk/globals/window';
-import mediaQuery from 'gk/lib/mediaQuery';
-import Logger from 'gk/lib/logger';
-import localStorage from 'gk/globals/localStorage';
-import rumba from './../rumba';
+import { window, Logger } from 'opendatalayer';
+// import mediaQuery from 'gk/lib/mediaQuery';
+import rumba from './../lib/rumba';
 
-const logger = new Logger('ba/lib/dal/bsna');
+const logger = new Logger('bsna');
 
 /**
- * bsna DAL plugin
+ * bsna ODL plugin
  *
  * Includes rumba logging library and hands over specific data to our logging backend.
  * Interface and transport data is compliant with JUMPRFC018,
@@ -16,15 +14,15 @@ const logger = new Logger('ba/lib/dal/bsna');
 export default class BSNA {
 
   /**
-   * Fired when the plugin is loaded by the DAL (during or after DOM load)
+   * Fired when the plugin is loaded by the ODL (during or after DOM load)
    *
-   * @param  {ba.lib.DAL}  dal     the global DAL instance
-   * @param  {Object}      data    the global DAL data object (as returned by DAL.getData)
+   * @param  {ba.lib.ODL}  odl     the global ODL instance
+   * @param  {Object}      data    the global ODL data object (as returned by ODL.getData)
    * @param  {Object}      config  custom configuration for this service
    */
-  constructor(dal, data, config) {
+  constructor(odl, data, config) {
     logger.log('initialize');
-    this.optedOut = localStorage.getItem('ba:optout') === '1';
+    this.optedOut = window.localStorage.getItem('ba:optout') === '1';
     if (!this.optedOut) {
       logger.log('starting bsna tracking');
       // init rumba
@@ -38,7 +36,7 @@ export default class BSNA {
       });
       // handle opt-out requests for rumba
       if (window.location.href.match(/(\?|&)trackingoptout=1/i)) {
-        localStorage.setItem('ba:optout', '1');
+        window.localStorage.setItem('ba:optout', '1');
       }
     } else {
       logger.log('bsna tracking opt-out is active');
@@ -47,7 +45,7 @@ export default class BSNA {
 
   /**
    * Capture all async events and send them to rumba.
-   * @TODO add loglevel argument to DAL
+   * @TODO add loglevel argument to ODL
    */
   handleEvent(name, data) {
     if (this.optedOut) {
@@ -57,20 +55,20 @@ export default class BSNA {
     switch (name) {
       case 'initialize': {
         const navigationData = data.navigation ? data.navigation : {entries: []};
-        const pageLoad = rumba.BAPageLoadEvent.create(data.page.type, data.page.name, mediaQuery.currentRange, navigationData);
+        const pageLoad = rumba.BAPageLoadEvent.create(data.page.type, data.page.name, 'FIXME:mediaQuery', navigationData);
         switch (data.page.type) {
           case 'productdetail': {
-            pageLoad.product = this.rumbaProductFromDALProductData(data.product);
+            pageLoad.product = this.rumbaProductFromODLProductData(data.product);
             break;
           }
           case 'checkout-confirmation': {
-            const lineItems = data.order.products.map((p) => rumba.BALineItem.create(this.rumbaProductFromDALProductData(p), p.quantity));
+            const lineItems = data.order.products.map((p) => rumba.BALineItem.create(this.rumbaProductFromODLProductData(p), p.quantity));
             pageLoad.order = rumba.BAOrder.create(lineItems);
             break;
           }
           case 'category': {
             if (data.brand) {
-              pageLoad.brand = this.rumbaBrandFromDALBrandData(data.brand);
+              pageLoad.brand = this.rumbaBrandFromODLBrandData(data.brand);
             }
             break;
           }
@@ -83,7 +81,7 @@ export default class BSNA {
         break;
       }
       case 'addtocart': {
-        const e = rumba.BAProductAddedToCartEvent.create(rumba.BALineItem.create(this.rumbaProductFromDALProductData(data.product), data.quantity));
+        const e = rumba.BAProductAddedToCartEvent.create(rumba.BALineItem.create(this.rumbaProductFromODLProductData(data.product), data.quantity));
         rumba.event(e);
         rumba.push();
       }
@@ -104,24 +102,24 @@ export default class BSNA {
   }
 
   /**
-   * Create a JUMPRFC018-compliant product payload object from a DALProductData object.
-   * @param  {DALProductData}  product  product data to convert
+   * Create a JUMPRFC018-compliant product payload object from a ODLProductData object.
+   * @param  {ODLProductData}  product  product data to convert
    */
-  rumbaProductFromDALProductData(product) {
+  rumbaProductFromODLProductData(product) {
     return rumba.BAProduct.create(
       product.productId,
       product.variantId,
       product.ean,
       product.aonr,
-      this.rumbaBrandFromDALBrandData(product.brandData),
+      this.rumbaBrandFromODLBrandData(product.brandData),
     );
   }
 
   /**
-   * Create a JUMPRFC018-compliant brand payload object from a DALBrandData object.
-   * @param  {DALBrandData}  brand  brand data to convert
+   * Create a JUMPRFC018-compliant brand payload object from a ODLBrandData object.
+   * @param  {ODLBrandData}  brand  brand data to convert
    */
-  rumbaBrandFromDALBrandData(brand) {
+  rumbaBrandFromODLBrandData(brand) {
     return rumba.BABrand.create(brand.name, brand.brandKey, brand.lineKey);
   }
 }
