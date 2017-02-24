@@ -21,7 +21,6 @@ describe('opendatalayer-plugins-kaufhof/adnymics', () => {
     odlMock.window._paq = [];
     odlMock.window._paq.push = sinon.spy();
     // mock data
-    odlMock = {};
     odlDataMock = odlDataTypes.getODLGlobalDataStub();
     odlDataMock.identity = { bid: 'abcdefg' };
     odlConfigMock = { siteId: '99' };
