@@ -10,7 +10,9 @@ reference them in your ODL Builder configuration like this:
 ```javascript
 odlBuilder.configure({
   plugins: {
-    './node_modules/opendatalayer-plugins-kaufhof/dist/econda'
+    './node_modules/opendatalayer-plugins-kaufhof/dist/econda': {
+      config: { }
+    }
   }
 })
 ```
