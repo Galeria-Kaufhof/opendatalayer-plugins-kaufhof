@@ -1,136 +1,94 @@
 import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/dal/aff/criteo', () => {
-  let [window, dalApi, dalDataMock, dalConfigMock, Service, mqMock, cookieSpy, loggerSpy, lastAddedElement] = [];
+describe('opendatalayer-plugins-kaufhof/criteo', () => {
+  let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock] = [];
 
-  // check whether an event with teh given name and given additional data
-  // exists in global criteo event queue
-  const assertCriteoEventData = (name, value) => {
-    for (let i = 0; i < window.criteo_q.length; i++) {
-      const item = window.criteo_q[i];
-      if (item.event === name) {
-        // clone event
-        const expectation = JSON.parse(JSON.stringify(value));
-        expectation.event = name;
-        assert.deepEqual(item, expectation);
-        return;
-      }
-    }
-    assert.isTrue(false, `assertCriteoEventData: ${name} not equals ${JSON.stringify(value)}`);
-  };
-
-  beforeEach((done) => {
-    window = {
-      document: {
-        createElement(type) {
-          return { src: '', tagName: type };
-        },
-        getElementsByTagName() {
-          return [{
-            parentNode: {
-              insertBefore(element, parent) {
-                return lastAddedElement = element;
-              },
-            },
-            appendChild() {},
-          }];
-        },
-      },
-    };
-    mqMock = { currentRange: '' };
-    cookieSpy = { get: sinon.stub() };
-    // spies
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
+  beforeEach(() => {
     // mock data
-    dalApi = {};
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub();
-    dalConfigMock = { accountId: 1234 };
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    odlConfigMock = { accountId: 1234 };
     // register mocks
-    mockModule('gk/vendor/cookie', cookieSpy);
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/mediaQuery', mqMock);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/aff/criteo'));
-    System.import('ba/lib/dal/aff/criteo').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    mocks = initMocks();
+    mocks.odl.window.criteo_q = [];
+    mocks.odl.window.criteo_q.push = sinon.spy();
+    // load module
+    return setupModule('./src/plugins/criteo').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   describe('Init', () => {
     it('should add the criteo pixel to the DOM', () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      assert.equal(lastAddedElement.src, '//static.criteo.net/js/ld/ld.js');
-      assert.equal(lastAddedElement.async, true);
-      return assert.equal(lastAddedElement.tagName, 'script');
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      const s = mocks.odl.window.document.getElementsByTagName('script')[0];
+      assert.equal(s.src, '//static.criteo.net/js/ld/ld.js');
+      assert.equal(s.async, true);
+      assert.equal(s.tagName.toLowerCase(), 'script');
     });
 
     it('should create the global criteo tracking object as Array', () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      assert.isDefined(window.criteo_q);
-      return assert.isArray(window.criteo_q);
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      assert.isDefined(mocks.odl.window.criteo_q);
+      assert.isArray(mocks.odl.window.criteo_q);
     });
 
     it('should set the criteo accountId to the value supplied via config', () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      return assertCriteoEventData('setAccount', { account: dalConfigMock.accountId });
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.criteo_q.push, { event: 'setAccount', account: 1234 });
     });
 
-    it("should send an 'm' when the breakpoint is 'up_to_M'", () => {
-      mqMock.currentRange = 'up_to_M';
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      return assertCriteoEventData('setSiteType', { type: 'm' });
+    /* @INFO: we disable these until we have a way to dynamically react to values during runtime
+    it("should send a 'm' when the site type in config is set to 'm'", () => {
+      odlConfigMock.siteType = 'm';
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.criteo_q.push, { event: 'setSiteType', type: 'm' });
     });
 
-    it("should send a 't' when the breakpoint is 'M_to_L'", () => {
-      mqMock.currentRange = 'M_to_L';
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      return assertCriteoEventData('setSiteType', { type: 't' });
+    it("should send a 't' when the site type in config is set to 't'", () => {
+      odlConfigMock.siteType = 't';
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.criteo_q.push, { event: 'setSiteType', type: 't' });
     });
 
-    return it("should send a 'd' when the breakpoint is 'L_and_up'", () => {
-      mqMock.currentRange = 'L_and_up';
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      return assertCriteoEventData('setSiteType', { type: 'd' });
+    return it("should send a 'd' when the site type in config is set to 't'", () => {
+      odlConfigMock.siteType = 'd';
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.criteo_q.push, { event: 'setSiteType', type: 'd' });
     });
+    */
   });
 
   return describe('Report', () => {
     it("should track a 'viewHome' event when pageType is 'homepage", () => {
-      dalDataMock.page.type = 'homepage';
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      return assertCriteoEventData('viewHome', {});
+      odlDataMock.page.type = 'homepage';
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.criteo_q.push, { event: 'viewHome' });
     });
 
     it("should track a 'viewList' event and pass item data from search.eans when pageType is 'search", () => {
-      dalDataMock.page.type = 'search';
-      dalDataMock.search =
-        { aonrs: ['123', '456', '789'] };
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      return assertCriteoEventData('viewList', { item: dalDataMock.search.aonrs });
+      odlDataMock.page.type = 'search';
+      odlDataMock.search = { aonrs: ['123', '456', '789'] };
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.criteo_q.push, { event: 'viewList', item: odlDataMock.search.aonrs });
     });
 
     it("should track a 'viewList' event and pass item data from search.eans when pageType is 'category", () => {
-      dalDataMock.page.type = 'category';
-      dalDataMock.category =
-        { aonrs: ['123', '456', '789'] };
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      return assertCriteoEventData('viewList', { item: dalDataMock.category.aonrs });
+      odlDataMock.page.type = 'category';
+      odlDataMock.category = { aonrs: ['123', '456', '789'] };
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.criteo_q.push, { event: 'viewList', item: odlDataMock.category.aonrs });
     });
 
     it("should track a 'viewItem' event and pass data from product.ean when pageType is 'productdetail", () => {
-      dalDataMock.page.type = 'productdetail';
-      dalDataMock.product = dalDataTypes.getDALCartProductDataStub();
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      return assertCriteoEventData('viewItem', { item: dalDataMock.product.aonr });
+      odlDataMock.page.type = 'productdetail';
+      odlDataMock.product = odlDataTypes.getODLCartProductDataStub();
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.criteo_q.push, { event: 'viewItem', item: odlDataMock.product.aonr });
     });
 
     return describe('checkout:', () => {
@@ -138,16 +96,17 @@ describe('ba/lib/dal/aff/criteo', () => {
 
       beforeEach(() => {
         // create product stubs
-        p1 = dalDataTypes.getDALCartProductDataStub(123);
-        p2 = dalDataTypes.getDALCartProductDataStub(456);
-        return p3 = dalDataTypes.getDALCartProductDataStub(789);
+        p1 = odlDataTypes.getODLCartProductDataStub(123);
+        p2 = odlDataTypes.getODLCartProductDataStub(456);
+        p3 = odlDataTypes.getODLCartProductDataStub(789);
       });
 
       it("should track a 'viewCart' event and pass data from cart.prodcuts when pageType is 'checkout-cart", () => {
-        dalDataMock.page.type = 'checkout-cart';
-        dalDataMock.cart = dalDataTypes.getDALCartDataStub([p1, p2, p3]);
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        return assertCriteoEventData('viewBasket', {
+        odlDataMock.page.type = 'checkout-cart';
+        odlDataMock.cart = odlDataTypes.getODLCartDataStub([p1, p2, p3]);
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.criteo_q.push, {
+          event: 'viewBasket',
           item: [
             { id: p1.aonr, price: p1.priceData.total, quantity: p1.quantity },
             { id: p2.aonr, price: p2.priceData.total, quantity: p2.quantity },
@@ -157,11 +116,12 @@ describe('ba/lib/dal/aff/criteo', () => {
       });
 
       it("should track a 'trackTransaction' event and pass data from order.prodcuts when pageType is 'checkout-confirmation", () => {
-        dalDataMock.page.type = 'checkout-confirmation';
-        dalDataMock.order = dalDataTypes.getDALOrderDataStub([p1, p2, p3]);
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        return assertCriteoEventData('trackTransaction', {
-          id: dalDataMock.order.id,
+        odlDataMock.page.type = 'checkout-confirmation';
+        odlDataMock.order = odlDataTypes.getODLOrderDataStub([p1, p2, p3]);
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.criteo_q.push, {
+          event: 'trackTransaction',
+          id: odlDataMock.order.id,
           deduplication: 0,
           item: [
             { id: p1.aonr, price: p1.priceData.total, quantity: p1.quantity },
@@ -172,12 +132,13 @@ describe('ba/lib/dal/aff/criteo', () => {
       });
 
       it("should track a 'trackTransaction' event and pass user_segment=1 if paybackPoints are defined", () => {
-        dalDataMock.page.type = 'checkout-confirmation';
-        dalDataMock.order = dalDataTypes.getDALOrderDataStub([p1, p2, p3]);
-        dalDataMock.order.paybackPoints = 123;
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        return assertCriteoEventData('trackTransaction', {
-          id: dalDataMock.order.id,
+        odlDataMock.page.type = 'checkout-confirmation';
+        odlDataMock.order = odlDataTypes.getODLOrderDataStub([p1, p2, p3]);
+        odlDataMock.order.paybackPoints = 123;
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.criteo_q.push, {
+          event: 'trackTransaction',
+          id: odlDataMock.order.id,
           deduplication: 0,
           user_segment: '1',
           item: [
@@ -189,12 +150,13 @@ describe('ba/lib/dal/aff/criteo', () => {
       });
 
       return it('should assign a transaction to criteo if the econda emos_jckamp cookie contains campaign=criteo', () => {
-        cookieSpy.get.returns('&campaign=criteo/bla/blubb');
-        dalDataMock.page.type = 'checkout-confirmation';
-        dalDataMock.order = dalDataTypes.getDALOrderDataStub([p1, p2, p3]);
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        return assertCriteoEventData('trackTransaction', {
-          id: dalDataMock.order.id,
+        mocks.odl.cookie.get.returns('&campaign=criteo/bla/blubb');
+        odlDataMock.page.type = 'checkout-confirmation';
+        odlDataMock.order = odlDataTypes.getODLOrderDataStub([p1, p2, p3]);
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.criteo_q.push, {
+          event: 'trackTransaction',
+          id: odlDataMock.order.id,
           deduplication: 1,
           item: [
             { id: p1.aonr, price: p1.priceData.total, quantity: p1.quantity },

@@ -1,6 +1,6 @@
 import { window, Logger, cookie } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/odl/aff/criteo');
+const logger = new Logger('criteo');
 
 /**
  * Criteo ODL plugin, integrating criteo pixel
@@ -12,8 +12,8 @@ export default class Criteo {
     const el = window.document.createElement('script');
     el.src = '//static.criteo.net/js/ld/ld.js';
     el.async = true;
-    const s = window.document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(el, s);
+    const head = window.document.getElementsByTagName('HEAD')[0];
+    head.appendChild(el);
     // create core tracking object and track basics
     window.criteo_q = window.criteo_q || [];
     this.event('setAccount', { account: config.accountId });
@@ -55,7 +55,7 @@ export default class Criteo {
   // get product items from a ODLCartData object the way criteo needs it
   getProductItems(data) {
     const items = [];
-    for (let i = 0; i < data.products.length; i++) {
+    for (let i = 0; i < data.products.length; i += 1) {
       const p = data.products[i];
       items.push({ id: p.aonr, price: p.priceData.total, quantity: p.quantity });
     }

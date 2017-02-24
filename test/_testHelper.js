@@ -30,6 +30,7 @@ export function initMocks() {
       window: jsdom.jsdom('<html><body></body></html>').defaultView,
       Logger: () => loggerSpy,
       helpers: { addScript: sinon.spy(), addImage: sinon.spy() },
+      cookie: { get: sinon.stub(), set: sinon.stub() },
     },
     logger: loggerSpy,
   };
