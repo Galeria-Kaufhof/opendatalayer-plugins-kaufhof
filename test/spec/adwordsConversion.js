@@ -1,24 +1,13 @@
 import { describe, it, beforeEach } from 'mocha';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import mockModule from 'systemjs-mock-module';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
-import jsdom from 'jsdom';
-import './../systemjs.config';
+import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
 describe('opendatalayer-plugins-kaufhof/adwordsConversion', () => {
-  let [odlMock, Service, loggerSpy, odlApi, odlDataMock, odlConfigMock] = [];
+  let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock] = [];
 
   beforeEach(() => {
     // spies
-    odlMock = {
-      window: jsdom.jsdom('<html><body></body></html>').defaultView,
-      Logger: () => loggerSpy,
-      helpers: { addScript: sinon.spy() },
-    };
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
-    odlMock.window.require = sinon.stub().callsArg(1);
-    odlMock.window.google_trackConversion = sinon.stub();
     // mock data
     odlApi = {};
     odlDataMock = odlDataTypes.getODLGlobalDataStub('checkout-confirmation');
@@ -29,23 +18,24 @@ describe('opendatalayer-plugins-kaufhof/adwordsConversion', () => {
       conversionCurrency: 'MY$',
     };
     // register mocks
-    mockModule(System, 'opendatalayer', odlMock);
-    // clear module first
-    System.delete(System.normalizeSync('./src/plugins/adwordsConversion'));
-    return System.import('./src/plugins/adwordsConversion').then((m) => {
-      Service = m.default;
-    }).catch(err => console.error(err));
+    mocks = initMocks();
+    mocks.odl.window.require = sinon.stub().callsArg(1);
+    mocks.odl.window.google_trackConversion = sinon.stub();
+    // load module
+    return setupModule('./src/plugins/adwordsConversion').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it('should lazy-load the global googleadservices script', () => {
-    jsdom.changeURL(odlMock.window, 'https://example.com/someurl.foo'); // force https protocol!
-    new Service(odlApi, odlDataMock, odlConfigMock);
-    sinon.assert.calledWith(odlMock.window.require, ['https://www.googleadservices.com/pagead/conversion_async.js']);
+    getJSDOM().changeURL(mocks.odl.window, 'https://example.com/someurl.foo'); // force https protocol!
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window.require, ['https://www.googleadservices.com/pagead/conversion_async.js']);
   });
 
   it('should define the static globals', () => {
-    new Service(odlApi, odlDataMock, odlConfigMock);
-    sinon.assert.calledWith(odlMock.window.google_trackConversion, sinon.match({
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({
       google_conversion_id: odlConfigMock.conversionId,
       google_conversion_label: odlConfigMock.conversionLabel,
       google_remarketing_only: false,
@@ -55,13 +45,13 @@ describe('opendatalayer-plugins-kaufhof/adwordsConversion', () => {
   });
 
   it("should track the correct conversion value if the pageType is 'checkout-confirmation'", () => {
-    new Service(odlApi, odlDataMock, odlConfigMock);
-    sinon.assert.calledWith(odlMock.window.google_trackConversion, sinon.match({ google_conversion_value: odlDataMock.order.priceData.total }));
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({ google_conversion_value: odlDataMock.order.priceData.total }));
   });
 
   it("should not track anything if the pageType isnt 'checkout-confirmation'", () => {
     odlDataMock.page.type = 'someotherpage';
-    new Service(odlApi, odlDataMock, odlConfigMock);
-    sinon.assert.notCalled(odlMock.window.google_trackConversion);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.notCalled(mocks.odl.window.google_trackConversion);
   });
 });
