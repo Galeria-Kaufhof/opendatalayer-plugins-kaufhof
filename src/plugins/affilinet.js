@@ -1,6 +1,6 @@
 import { Logger, helpers } from 'opendatalayer';
 
-const logger = new Logger('opendatalayer-plugins-kaufhof/affilinet');
+const logger = new Logger('affilinet');
 
 /**
  * Affili.net ODL plugin
