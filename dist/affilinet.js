@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _opendatalayer = require('opendatalayer');
 
-var logger = new _opendatalayer.Logger('opendatalayer-plugins-kaufhof/affilinet');
+var logger = new _opendatalayer.Logger('affilinet');
 
 /**
  * Affili.net ODL plugin

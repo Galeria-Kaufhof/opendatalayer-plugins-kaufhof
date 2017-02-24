@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _opendatalayer = require('opendatalayer');
 
-var logger = new _opendatalayer.Logger('ba/lib/odl/aff/criteo');
+var logger = new _opendatalayer.Logger('criteo');
 
 /**
  * Criteo ODL plugin, integrating criteo pixel
@@ -20,8 +20,8 @@ var Criteo = function () {
     var el = _opendatalayer.window.document.createElement('script');
     el.src = '//static.criteo.net/js/ld/ld.js';
     el.async = true;
-    var s = _opendatalayer.window.document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(el, s);
+    var head = _opendatalayer.window.document.getElementsByTagName('HEAD')[0];
+    head.appendChild(el);
     // create core tracking object and track basics
     _opendatalayer.window.criteo_q = _opendatalayer.window.criteo_q || [];
     this.event('setAccount', { account: config.accountId });
@@ -68,7 +68,7 @@ var Criteo = function () {
     key: 'getProductItems',
     value: function getProductItems(data) {
       var items = [];
-      for (var i = 0; i < data.products.length; i++) {
+      for (var i = 0; i < data.products.length; i += 1) {
         var p = data.products[i];
         items.push({ id: p.aonr, price: p.priceData.total, quantity: p.quantity });
       }

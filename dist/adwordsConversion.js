@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _opendatalayer = require('opendatalayer');
 
-var logger = new _opendatalayer.Logger('ba/lib/odl/adwordsConversion');
+var logger = new _opendatalayer.Logger('adwordsConversion');
 
 /**
  * Google Adwords Conversion pixel ODL plugin

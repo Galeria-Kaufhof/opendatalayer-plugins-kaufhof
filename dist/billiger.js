@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _opendatalayer = require('opendatalayer');
 
-var logger = new _opendatalayer.Logger('ba/lib/odl/bt/billiger');
+var logger = new _opendatalayer.Logger('billiger');
 
 /**
  * Billiger.de ODL plugin
@@ -19,13 +19,13 @@ var Billiger = function Billiger(odl, data, config) {
 
   if (data.page.type === 'checkout-confirmation') {
     var articles = '';
-    for (var i = 0; i < data.order.products.length; i++) {
+    for (var i = 0; i < data.order.products.length; i += 1) {
       var p = data.order.products[i];
       var num = i + 1;
       articles += '&aid_' + num + '=' + p.ean + '&name_' + num + '=' + encodeURIComponent(p.name) + '&cnt_' + num + '=' + p.quantity + '&val_' + num + '=' + p.priceData.net;
     }
 
-    pixelHelper.addImage('//billiger.de/sale?shop_id=' + config.shopId + '&oid=' + data.order.id + articles, 1, 1);
+    _opendatalayer.helpers.addImage('//billiger.de/sale?shop_id=' + config.shopId + '&oid=' + data.order.id + articles, 1, 1);
   }
 };
 
