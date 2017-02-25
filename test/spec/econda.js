@@ -366,10 +366,8 @@ describe('opendatalayer-plugins-kaufhof/econda', () => {
     it("should suffix the billing address with '/Testuser' in case of test orders", () => {
       odlDataMock.order.testOrder = true;
       callPlugin();
-      assert.equal(
-        mocks.odl.window.emosPropertiesEvent.args[0][0].billing[2],
-        `${odlDataMock.order.customer.billingAddress.zip}/${odlDataMock.order.customer.billingAddress.town}/Testuser`
-      );
+      assert.equal(mocks.odl.window.emosPropertiesEvent.args[0][0].billing[2],
+        `${odlDataMock.order.customer.billingAddress.zip}/${odlDataMock.order.customer.billingAddress.town}/Testuser`);
     });
 
     it('should track product informations', () => {
