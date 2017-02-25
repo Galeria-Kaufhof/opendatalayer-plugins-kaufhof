@@ -26,8 +26,8 @@ var FacebookWCA = function () {
     if (!_fbq.loaded) {
       var fbds = _opendatalayer.window.document.createElement('script');
       fbds.src = '//connect.facebook.net/en_US/fbds.js';
-      var s = _opendatalayer.window.document.getElementsByTagName('script')[0];
-      s.parentNode.insertBefore(fbds, s);
+      var head = _opendatalayer.window.document.getElementsByTagName('head')[0];
+      head.appendChild(fbds);
       _fbq.loaded = true;
     }
     _fbq.push(['addPixelId', config.pixelId]);

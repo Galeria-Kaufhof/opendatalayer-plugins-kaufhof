@@ -4,35 +4,26 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _window = require('gk/globals/window');
+var _opendatalayer = require('opendatalayer');
 
-var _window2 = babelHelpers.interopRequireDefault(_window);
-
-var _logger = require('gk/lib/logger');
-
-var _logger2 = babelHelpers.interopRequireDefault(_logger);
-
-var logger = new _logger2.default('ba/lib/dal/tharuka');
+var logger = new _opendatalayer.Logger('tharuka');
 
 /**
- * Tharuka DAL plugin
- *
- * @module   gk.lib.dal
- * @class    tharuka
- * @implements  IDALService
+ * Tharuka ODL plugin
  */
+/* eslint-disable no-underscore-dangle */
 
 var Tharuka =
 
 /**
- * Fired when the plugin is loaded by the DAL (during or after DOM load)
+ * Fired when the plugin is loaded by the ODL (during or after DOM load)
  *
  * @method constructor
- * @param  {gk.lib.DAL}  dal     the global DAL instance
- * @param  {Object}      data    the global DAL data object (as returned by DAL.getData)
- * @param  {Object}      config  custom configuration for this service
+ * @param  {ODL}     odl     the global ODL instance
+ * @param  {Object}  data    the global ODL data object (as returned by ODL.getData)
+ * @param  {Object}  config  custom configuration for this service
  */
-function Tharuka(dal, data, config) {
+function Tharuka(odl, data, config) {
   babelHelpers.classCallCheck(this, Tharuka);
 
   var ordr = data.order;
@@ -46,7 +37,7 @@ function Tharuka(dal, data, config) {
 
   logger.log('initialize');
 
-  _window2.default.THFilter = {
+  _opendatalayer.window.THFilter = {
     anrede: cusAnrede,
     plz: addr.zip,
     land: addr.countryCode,
@@ -54,7 +45,7 @@ function Tharuka(dal, data, config) {
     gutscheincode: ordr.couponCode || ''
   };
 
-  _window2.default.THPrefill = {
+  _opendatalayer.window.THPrefill = {
     anrede: cusAnrede,
     vorname: cus.firstName || '',
     name: cus.lastName || '',
@@ -69,13 +60,13 @@ function Tharuka(dal, data, config) {
   };
 
   // find tharuka container and insert target div
-  var div = _window2.default.document.createElement('div');
+  var div = _opendatalayer.window.document.createElement('div');
   div.id = 'tharuka';
-  _window2.default.document.querySelector('#or-page__confirmation__tharuka').appendChild(div);
+  _opendatalayer.window.document.querySelector('#or-page__confirmation__tharuka').appendChild(div);
 
   // require tharuka script
   // window.require(['//tharuka-app.de/api/684/tharuka.js'], () => logger.log('loaded')
-  _window2.default.require(['//tharuka-app.de/api/' + config.accountId + '/tharuka.js'], function () {
+  _opendatalayer.window.require(['//tharuka-app.de/api/' + config.accountId + '/tharuka.js'], function () {
     return logger.log('loaded');
   });
 };

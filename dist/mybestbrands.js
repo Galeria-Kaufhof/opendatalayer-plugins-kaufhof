@@ -4,28 +4,22 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _window = require('gk/globals/window');
+var _opendatalayer = require('opendatalayer');
 
-var _window2 = babelHelpers.interopRequireDefault(_window);
-
-var _logger = require('gk/lib/logger');
-
-var _logger2 = babelHelpers.interopRequireDefault(_logger);
-
-var logger = new _logger2.default('ba/lib/dal/bt/mybestbrands');
+var logger = new _opendatalayer.Logger('mybestbrands');
 
 // NOTE: mybestbrands got no unit test, due to the completely stupid script block
 // they supply to their customers
 
 /**
- * mybestbrands DAL plugin
+ * mybestbrands ODL plugin
  *
- * @module   ba.lib.dal.bt.mybestbrands
+ * @module   ba.lib.odl.bt.mybestbrands
  * @class    MyBestBrands
- * @implements  IDALService
+ * @implements  IODLService
  */
 
-var MyBestBrands = function MyBestBrands(dal, data, config) {
+var MyBestBrands = function MyBestBrands(odl, data, config) {
   babelHelpers.classCallCheck(this, MyBestBrands);
 
   logger.log('initialize');
@@ -90,10 +84,10 @@ var MyBestBrands = function MyBestBrands(dal, data, config) {
     };
 
     // for testing
-    _window2.default.itsConv = itsConv;
+    _opendatalayer.window.itsConv = itsConv;
 
     // DO NOT CHANGE. The following lines assure tracking functionality.
-    var document = _window2.default.document;
+    var document = _opendatalayer.window.document;
 
     en = function en(v) {
       if (v) {

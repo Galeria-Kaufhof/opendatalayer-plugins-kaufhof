@@ -4,44 +4,26 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _window = require('gk/globals/window');
+var _opendatalayer = require('opendatalayer');
 
-var _window2 = babelHelpers.interopRequireDefault(_window);
-
-var _mediaQuery = require('gk/lib/mediaQuery');
-
-var _mediaQuery2 = babelHelpers.interopRequireDefault(_mediaQuery);
-
-var _logger = require('gk/lib/logger');
-
-var _logger2 = babelHelpers.interopRequireDefault(_logger);
-
-var _config = require('gk/lib/config');
-
-var _config2 = babelHelpers.interopRequireDefault(_config);
-
-var _stacy = require('./../stacy');
-
-var _stacy2 = babelHelpers.interopRequireDefault(_stacy);
+/* eslint-disable no-underscore-dangle, no-bitwise, max-len */
+// @TODO import mq from 'gk/lib/mediaQuery';
+// @TODO import stacy from './../lib/stacy';
 
 /**
- * stacy DAL plugin
+ * stacy ODL plugin
  *
  * Includes stacy logging library and hands over specific data to logging backend.
  *
  * @TODO
  * - connect with trafficbroker and log traffic sources
  * - log breakpoint changes by listening to mq.change
- *
- * @module   gk.lib.dal
- * @class    stacy
- * @implements  IDALService
  */
-var logger = new _logger2.default('ba/lib/dal/stacy');
+var logger = new _opendatalayer.Logger('stacy');
 
-// provide DAL data to metrics
+// provide ODL data to metrics
 /* eslint-disable no-underscore-dangle, no-bitwise, max-len */
-var _dalData = {};
+var _odlData = {};
 
 // stacy metric for fint-specific KPIs
 var FintPageMetric = {
@@ -51,18 +33,18 @@ var FintPageMetric = {
     // mq.on "change", (breakpoint) ->
     //   stacy.log "BreakPointChange", breakpoint
     var data = {
-      Breakpoint: _mediaQuery2.default.currentRange,
-      PageLocation: _window2.default.location.pathname + _window2.default.location.search,
-      PageType: _dalData.page.type,
-      PageName: _dalData.page.name,
-      SiteId: _dalData.site.id,
-      bid: _dalData.identity.bid,
-      tenantId: _config2.default.tenantId,
+      // Breakpoint: mq.currentRange,
+      PageLocation: _opendatalayer.window.location.pathname + _opendatalayer.window.location.search,
+      PageType: _odlData.page.type,
+      PageName: _odlData.page.name,
+      SiteId: _odlData.site.id,
+      bid: _odlData.identity.bid,
+      // tenantId: config.tenantId,
       Referrer: document.referrer
     };
     // if we have custom rum events, log them
-    for (var name in _window2.default._gk.timing.data) {
-      var value = _window2.default._gk.timing.data[name];
+    for (var name in _opendatalayer.window._gk.timing.data) {
+      var value = _opendatalayer.window._gk.timing.data[name];
       data['timing.' + name] = value;
     }
     return data;
@@ -72,24 +54,24 @@ var FintPageMetric = {
 var Stacy = function () {
 
   /**
-   * Fired when the plugin is loaded by the DAL (during or after DOM load)
+   * Fired when the plugin is loaded by the ODL (during or after DOM load)
    *
    * @method constructor
-   * @param  {gk.lib.DAL}  dal     the global DAL instance
-   * @param  {Object}      data    the global DAL data object (as returned by DAL.getData)
+   * @param  {gk.lib.ODL}  odl     the global ODL instance
+   * @param  {Object}      data    the global ODL data object (as returned by ODL.getData)
    * @param  {Object}      config  custom configuration for this service
    */
-  function Stacy(dal, data, config) {
+  function Stacy(odl, data, config) {
     babelHelpers.classCallCheck(this, Stacy);
 
     this._onPostData = this._onPostData.bind(this);
-    this.dal = dal;
+    this.odl = odl;
     this.data = data;
     logger.log('initialize');
-    // make DAL data available to metrics
-    _dalData = this.data;
+    // make ODL data available to metrics
+    _odlData = this.data;
     // init stacy
-    _stacy2.default.init({
+    stacy.init({
       backend: '/fintlog',
       repostErrors: false,
       pushInterval: 5,
@@ -102,7 +84,7 @@ var Stacy = function () {
 
   /**
    * Capture all async events and send them to stacy.
-   * @TODO add loglevel argument to DAL
+   * @TODO add loglevel argument to ODL
    */
 
 
@@ -151,10 +133,10 @@ var Stacy = function () {
           // enrich data with additional values (e.g. ms since requestStart)
           var currentData = completeData[timestamp];
           var d = currentData;
-          d.eventTime = _window2.default._gk && _window2.default._gk.timing ? _window2.default._gk.timing.now() : 0; // parseInt(timestamp, 10)
+          d.eventTime = _opendatalayer.window._gk && _opendatalayer.window._gk.timing ? _opendatalayer.window._gk.timing.now() : 0; // parseInt(timestamp, 10)
           d.rid = uuid;
           // manually push data to fintlog here
-          _stacy2.default.post(url, this._unicodeEscape(_window2.default.JSON.stringify(d)), _stacy2.default.clear);
+          stacy.post(url, this._unicodeEscape(_opendatalayer.window.JSON.stringify(d)), stacy.clear);
         }
       }
     }

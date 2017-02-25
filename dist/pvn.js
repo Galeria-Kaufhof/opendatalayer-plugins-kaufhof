@@ -4,37 +4,26 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _opendatalayer = require('opendatalayer');
+
 var _jquery = require('jquery');
 
 var _jquery2 = babelHelpers.interopRequireDefault(_jquery);
 
-var _logger = require('gk/lib/logger');
-
-var _logger2 = babelHelpers.interopRequireDefault(_logger);
-
-var _pixelHelper = require('../../pixelHelper');
-
-var pixelHelper = babelHelpers.interopRequireWildcard(_pixelHelper);
-
-
-var logger = new _logger2.default('ba/lib/dal/bt/affilinet');
+var logger = new _opendatalayer.Logger('PVN');
 
 /**
- * PVN pixel DAL plugin
- *
- * @module   ba.lib.dal.bt.pvn
- * @class    PVN
- * @implements  IDALService
+ * PVN pixel ODL plugin
  */
 
-var PVN = function PVN(dal, data, config) {
+var PVN = function PVN(odl, data, config) {
   babelHelpers.classCallCheck(this, PVN);
 
   logger.log('initialize');
 
   if (data.page.type === 'checkout-confirmation') {
     // order pixel
-    pixelHelper.addScript('https://partnerprogramm.galeria-kaufhof.de/trck/etrack/?campaign_id=1&trigger_id=1&token=' + data.order.id + '&descr=&currency=' + config.currency + '&turnover=' + data.order.priceData.net + '&vc=' + data.order.couponCode + '&t=js');
+    _opendatalayer.helpers.addScript('https://partnerprogramm.galeria-kaufhof.de/trck/etrack/?campaign_id=1&trigger_id=1&token=' + data.order.id + '&descr=&currency=' + config.currency + '&turnover=' + data.order.priceData.net + '&vc=' + data.order.couponCode + '&t=js');
 
     // START EASY AFFILIATE
     var orderId = data.order.id;

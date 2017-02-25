@@ -4,50 +4,38 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _window = require('gk/globals/window');
+var _opendatalayer = require('opendatalayer');
 
-var _window2 = babelHelpers.interopRequireDefault(_window);
-
-var _mediaQuery = require('gk/lib/mediaQuery');
-
-var _mediaQuery2 = babelHelpers.interopRequireDefault(_mediaQuery);
-
-var _logger = require('gk/lib/logger');
-
-var _logger2 = babelHelpers.interopRequireDefault(_logger);
-
-var _localStorage = require('gk/globals/localStorage');
-
-var _localStorage2 = babelHelpers.interopRequireDefault(_localStorage);
-
-var _rumba = require('./../rumba');
+var _rumba = require('./../lib/rumba');
 
 var _rumba2 = babelHelpers.interopRequireDefault(_rumba);
 
-var logger = new _logger2.default('ba/lib/dal/bsna');
+var logger = new _opendatalayer.Logger('bsna');
 
 /**
- * bsna DAL plugin
+ * bsna ODL plugin
  *
  * Includes rumba logging library and hands over specific data to our logging backend.
  * Interface and transport data is compliant with JUMPRFC018,
  * see http://gitlab.gkh-setu.de/specs/jumprfc-018-analytics/blob/master/jumprfc-018-analytics.md
  */
 
+// import mediaQuery from 'gk/lib/mediaQuery';
+
 var BSNA = function () {
 
   /**
-   * Fired when the plugin is loaded by the DAL (during or after DOM load)
+   * Fired when the plugin is loaded by the ODL (during or after DOM load)
    *
-   * @param  {ba.lib.DAL}  dal     the global DAL instance
-   * @param  {Object}      data    the global DAL data object (as returned by DAL.getData)
+   * @param  {ba.lib.ODL}  odl     the global ODL instance
+   * @param  {Object}      data    the global ODL data object (as returned by ODL.getData)
    * @param  {Object}      config  custom configuration for this service
    */
-  function BSNA(dal, data, config) {
+  function BSNA(odl, data, config) {
     babelHelpers.classCallCheck(this, BSNA);
 
     logger.log('initialize');
-    this.optedOut = _localStorage2.default.getItem('ba:optout') === '1';
+    this.optedOut = _opendatalayer.window.localStorage.getItem('ba:optout') === '1';
     if (!this.optedOut) {
       logger.log('starting bsna tracking');
       // init rumba
@@ -60,8 +48,8 @@ var BSNA = function () {
         browserId: data.identity.bid
       });
       // handle opt-out requests for rumba
-      if (_window2.default.location.href.match(/(\?|&)trackingoptout=1/i)) {
-        _localStorage2.default.setItem('ba:optout', '1');
+      if (_opendatalayer.window.location.href.match(/(\?|&)trackingoptout=1/i)) {
+        _opendatalayer.window.localStorage.setItem('ba:optout', '1');
       }
     } else {
       logger.log('bsna tracking opt-out is active');
@@ -70,7 +58,7 @@ var BSNA = function () {
 
   /**
    * Capture all async events and send them to rumba.
-   * @TODO add loglevel argument to DAL
+   * @TODO add loglevel argument to ODL
    */
 
 
@@ -87,17 +75,17 @@ var BSNA = function () {
         case 'initialize':
           {
             var navigationData = data.navigation ? data.navigation : { entries: [] };
-            var pageLoad = _rumba2.default.BAPageLoadEvent.create(data.page.type, data.page.name, _mediaQuery2.default.currentRange, navigationData);
+            var pageLoad = _rumba2.default.BAPageLoadEvent.create(data.page.type, data.page.name, 'FIXME:mediaQuery', navigationData);
             switch (data.page.type) {
               case 'productdetail':
                 {
-                  pageLoad.product = this.rumbaProductFromDALProductData(data.product);
+                  pageLoad.product = this.rumbaProductFromODLProductData(data.product);
                   break;
                 }
               case 'checkout-confirmation':
                 {
                   var lineItems = data.order.products.map(function (p) {
-                    return _rumba2.default.BALineItem.create(_this.rumbaProductFromDALProductData(p), p.quantity);
+                    return _rumba2.default.BALineItem.create(_this.rumbaProductFromODLProductData(p), p.quantity);
                   });
                   pageLoad.order = _rumba2.default.BAOrder.create(lineItems);
                   break;
@@ -105,7 +93,7 @@ var BSNA = function () {
               case 'category':
                 {
                   if (data.brand) {
-                    pageLoad.brand = this.rumbaBrandFromDALBrandData(data.brand);
+                    pageLoad.brand = this.rumbaBrandFromODLBrandData(data.brand);
                   }
                   break;
                 }
@@ -119,7 +107,7 @@ var BSNA = function () {
           }
         case 'addtocart':
           {
-            var e = _rumba2.default.BAProductAddedToCartEvent.create(_rumba2.default.BALineItem.create(this.rumbaProductFromDALProductData(data.product), data.quantity));
+            var e = _rumba2.default.BAProductAddedToCartEvent.create(_rumba2.default.BALineItem.create(this.rumbaProductFromODLProductData(data.product), data.quantity));
             _rumba2.default.event(e);
             _rumba2.default.push();
           }
@@ -141,24 +129,24 @@ var BSNA = function () {
     }
 
     /**
-     * Create a JUMPRFC018-compliant product payload object from a DALProductData object.
-     * @param  {DALProductData}  product  product data to convert
+     * Create a JUMPRFC018-compliant product payload object from a ODLProductData object.
+     * @param  {ODLProductData}  product  product data to convert
      */
 
   }, {
-    key: 'rumbaProductFromDALProductData',
-    value: function rumbaProductFromDALProductData(product) {
-      return _rumba2.default.BAProduct.create(product.productId, product.variantId, product.ean, product.aonr, this.rumbaBrandFromDALBrandData(product.brandData));
+    key: 'rumbaProductFromODLProductData',
+    value: function rumbaProductFromODLProductData(product) {
+      return _rumba2.default.BAProduct.create(product.productId, product.variantId, product.ean, product.aonr, this.rumbaBrandFromODLBrandData(product.brandData));
     }
 
     /**
-     * Create a JUMPRFC018-compliant brand payload object from a DALBrandData object.
-     * @param  {DALBrandData}  brand  brand data to convert
+     * Create a JUMPRFC018-compliant brand payload object from a ODLBrandData object.
+     * @param  {ODLBrandData}  brand  brand data to convert
      */
 
   }, {
-    key: 'rumbaBrandFromDALBrandData',
-    value: function rumbaBrandFromDALBrandData(brand) {
+    key: 'rumbaBrandFromODLBrandData',
+    value: function rumbaBrandFromODLBrandData(brand) {
       return _rumba2.default.BABrand.create(brand.name, brand.brandKey, brand.lineKey);
     }
   }]);

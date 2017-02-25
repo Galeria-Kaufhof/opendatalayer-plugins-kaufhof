@@ -4,35 +4,25 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _window = require('gk/globals/window');
+var _opendatalayer = require('opendatalayer');
 
-var _window2 = babelHelpers.interopRequireDefault(_window);
-
-var _config = require('gk/lib/config');
-
-var _config2 = babelHelpers.interopRequireDefault(_config);
-
-var _pixelHelper = require('./../pixelHelper');
-
-var pixelHelper = babelHelpers.interopRequireWildcard(_pixelHelper);
-
-//const logger = new Logger('ba/lib/dal/trbo');
+//const logger = new Logger('ba/lib/odl/trbo');
 
 var Trbo = function () {
-  function Trbo(dal, data, config) {
+  function Trbo(odl, data, config) {
     babelHelpers.classCallCheck(this, Trbo);
 
     //logger.log('initialize');
 
-    // disable in FOC/App cases
-    if (_config2.default.focMode || _config2.default.isAppContext) {
-      return;
-    }
+    // disable in FOC/App cases (@TODO: put in rule in ODL config)
+    //if (gkConfig.focMode || gkConfig.isAppContext) {
+    //  return;
+    //}
 
     // add trbo script
-    pixelHelper.addScript(config.scriptUrl);
+    _opendatalayer.helpers.addScript(config.scriptUrl);
 
-    var _trboq = _window2.default._trboq || [];
+    var _trboq = _opendatalayer.window._trboq || [];
     var pt = '';
 
     switch (data.page.type) {
@@ -60,7 +50,7 @@ var Trbo = function () {
         _trboq.push(['basket', {
           // coupon_code: data.cart.couponCode,
           value: data.cart.priceData.total,
-          products: this.buildProductsFromDAL(data.cart.products)
+          products: this.buildProductsFromODL(data.cart.products)
         }]);
         break;
       case 'checkout-confirmation':
@@ -70,7 +60,7 @@ var Trbo = function () {
             order_id: data.order.id,
             coupon_code: data.order.couponCode,
             value: data.order.priceData.total,
-            products: this.buildProductsFromDAL(data.order.products)
+            products: this.buildProductsFromODL(data.order.products)
           }]);
           break;
         }
@@ -81,7 +71,7 @@ var Trbo = function () {
     _trboq.push(['page', { type: pt }]);
 
     // for testing
-    _window2.default._trboq = _trboq;
+    _opendatalayer.window._trboq = _trboq;
   }
 
   babelHelpers.createClass(Trbo, [{
@@ -92,9 +82,9 @@ var Trbo = function () {
       }
     }
   }, {
-    key: 'buildProductsFromDAL',
-    value: function buildProductsFromDAL(dalProducts) {
-      return dalProducts.map(function (p) {
+    key: 'buildProductsFromODL',
+    value: function buildProductsFromODL(odlProducts) {
+      return odlProducts.map(function (p) {
         return {
           product_id: p.aonr,
           name: p.name,
@@ -105,9 +95,7 @@ var Trbo = function () {
     }
   }]);
   return Trbo;
-}();
-//import Logger from 'gk/lib/logger';
-/* eslint-disable no-underscore-dangle */
+}(); /* eslint-disable no-underscore-dangle */
 
 
 exports.default = Trbo;

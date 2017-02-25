@@ -4,32 +4,22 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _window = require('gk/globals/window');
-
-var _window2 = babelHelpers.interopRequireDefault(_window);
-
-var _logger = require('gk/lib/logger');
-
-var _logger2 = babelHelpers.interopRequireDefault(_logger);
+var _opendatalayer = require('opendatalayer');
 
 // import 'https://www.googleadservices.com/pagead/conversion_async.js';
 
-var logger = new _logger2.default('ba/lib/dal/aff/googleRemarketing');
+var logger = new _opendatalayer.Logger('googleRemarketing');
 
 /**
- * GoogleRemarketing pixel DAL plugin
- *
- * @module   ba.lib.dal.aff.googleRemarketing
- * @class    GoogleRemarketing
- * @implements  IDALService
+ * GoogleRemarketing pixel ODL plugin.
  */
 
-var GoogleRemarketing = function GoogleRemarketing(dal, data, config) {
+var GoogleRemarketing = function GoogleRemarketing(odl, data, config) {
   babelHelpers.classCallCheck(this, GoogleRemarketing);
 
   logger.log('initialize');
   // @TODO use System.import once systemjs is globally available
-  _window2.default.require([_window2.default.location.protocol + '//www.googleadservices.com/pagead/conversion_async.js'], function () {
+  _opendatalayer.window.require([_opendatalayer.window.location.protocol + '//www.googleadservices.com/pagead/conversion_async.js'], function () {
     // build params
     var _ref = [],
         pageType = _ref[0],
@@ -96,7 +86,7 @@ var GoogleRemarketing = function GoogleRemarketing(dal, data, config) {
     if (payback) {
       customParams.payback = payback;
     }
-    _window2.default.google_trackConversion({
+    _opendatalayer.window.google_trackConversion({
       google_conversion_id: config.conversionId,
       google_conversion_label: config.conversionLabel,
       google_remarketing_only: true,

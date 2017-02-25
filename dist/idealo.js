@@ -4,21 +4,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _logger = require('gk/lib/logger');
+var _opendatalayer = require('opendatalayer');
 
-var _logger2 = babelHelpers.interopRequireDefault(_logger);
-
-var logger = new _logger2.default('ba/lib/dal/bt/idealo');
+var logger = new _opendatalayer.Logger('idealo');
 
 /**
- * Idealo DAL plugin, simply displays idealo notice on checkout-confirmation page
- *
- * @module   ba.lib.dal.bt.idealo
- * @class    Idealo
- * @implements  IDALService
+ * Idealo ODL plugin, simply displays idealo notice on checkout-confirmation page.
  */
 
-var Idealo = function Idealo(dal, data) {
+var Idealo = function Idealo(odl, data) {
   babelHelpers.classCallCheck(this, Idealo);
 
   logger.log('initialize');
