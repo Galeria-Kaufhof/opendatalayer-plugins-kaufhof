@@ -17,8 +17,8 @@ export default class FacebookWCA {
     if (!_fbq.loaded) {
       const fbds = window.document.createElement('script');
       fbds.src = '//connect.facebook.net/en_US/fbds.js';
-      const s = window.document.getElementsByTagName('script')[0];
-      s.parentNode.insertBefore(fbds, s);
+      const head = window.document.getElementsByTagName('head')[0];
+      head.appendChild(fbds);
       _fbq.loaded = true;
     }
     _fbq.push(['addPixelId', config.pixelId]);

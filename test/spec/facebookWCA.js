@@ -1,108 +1,81 @@
 import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/dal/aff/facebookWCA', () => {
-  let [injector, window, dalApi, dalDataMock, dalConfigMock, Service, loggerSpy] = [];
+describe('ba/lib/odl/aff/facebookWCA', () => {
+  let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock] = [];
 
-  beforeEach((done) => {
+  beforeEach(() => {
     // mock data
-    window = {
-      document: {
-        createElement() { return (() => ({ src: '' })); },
-        getElementsByTagName() {
-          return [{
-            parentNode: {
-              insertBefore() {},
-            },
-          }];
-        },
-      },
-      _fbq: {
-        push: sinon.spy(),
-      },
-    };
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub();
-    dalConfigMock = {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    odlConfigMock = {
       pixelId: '1234567890',
       currency: 'MY$',
     };
     // spies
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
-    // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/aff/facebookWCA'));
-    System.import('ba/lib/dal/aff/facebookWCA').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    mocks = initMocks();
+    mocks.odl.window._fbq = { push: sinon.spy() };
+    // load module
+    return setupModule('./src/plugins/facebookWCA').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it('should append the facebook pixel to the DOM', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.isDefined(window._fbq);
-    assert.isTrue(window._fbq.loaded);
-  }
-  );
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.isDefined(mocks.odl.window._fbq);
+    assert.isTrue(mocks.odl.window._fbq.loaded);
+  });
     // TODO: pixel is in the DOM?
     // ...
 
   it('should pass the correct account to FB', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._fbq.push, ['addPixelId', dalConfigMock.pixelId]);
-  }
-  );
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._fbq.push, ['addPixelId', odlConfigMock.pixelId]);
+  });
 
   it('should set the FB pixel as initialized', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._fbq.push, ['track', 'PixelInitialized', {}]);
-  }
-  );
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._fbq.push, ['track', 'PixelInitialized', {}]);
+  });
 
   it("should not send any product data when the pagetype isnt in ['productdetail','checkout-complete']", () => {
-    dalDataMock.page.type = 'homepage';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(loggerSpy.log, sinon.match('not sending any product data'));
-  }
-  );
+    odlDataMock.page.type = 'homepage';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.logger.log, sinon.match('not sending any product data'));
+  });
 
   it("should pass the product id when the pagetype is 'productdetail'", () => {
-    dalDataMock.page.type = 'productdetail';
-    dalDataMock.product = dalDataTypes.getDALProductDataStub();
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._fbq.push, ['track', 'ViewContent', {
+    odlDataMock.page.type = 'productdetail';
+    odlDataMock.product = odlDataTypes.getODLProductDataStub();
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._fbq.push, ['track', 'ViewContent', {
       content_type: 'product',
-      content_ids: [dalDataMock.product.ean],
+      content_ids: [odlDataMock.product.ean],
     }]);
-  }
-  );
+  });
 
   it("should pass all products' EANs and the total price when the pagetype is 'checkout-confirmation'", () => {
-    dalDataMock.page.type = 'checkout-confirmation';
-    let [p1, p2, p3] = [dalDataTypes.getDALProductDataStub(123), dalDataTypes.getDALProductDataStub(456), dalDataTypes.getDALProductDataStub(789)];
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub([p1, p2, p3]);
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._fbq.push, ['track', 'Purchase', {
+    odlDataMock.page.type = 'checkout-confirmation';
+    const [p1, p2, p3] = [odlDataTypes.getODLProductDataStub(123), odlDataTypes.getODLProductDataStub(456), odlDataTypes.getODLProductDataStub(789)];
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub([p1, p2, p3]);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._fbq.push, ['track', 'Purchase', {
       content_type: 'product',
       content_ids: [p1.ean, p2.ean, p3.ean],
-      currency: dalConfigMock.currency,
-      value: dalDataMock.order.priceData.total,
+      currency: odlConfigMock.currency,
+      value: odlDataMock.order.priceData.total,
     }]);
-  }
-  );
+  });
 
   it("should pass the product's EAN when an event 'addtocart' is broadcasted", () => {
-    const p = dalDataTypes.getDALProductDataStub();
-    const fb = new Service(dalApi, dalDataMock, dalConfigMock);
+    const p = odlDataTypes.getODLProductDataStub();
+    const fb = new Plugin(odlApi, odlDataMock, odlConfigMock);
     fb.handleEvent('addtocart', { product: p });
-    sinon.assert.calledWith(window._fbq.push, ['track', 'AddToCart', {
+    sinon.assert.calledWith(mocks.odl.window._fbq.push, ['track', 'AddToCart', {
       content_type: 'product',
       content_ids: [p.ean],
     }]);
