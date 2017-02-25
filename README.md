@@ -24,16 +24,18 @@ odlBuilder.configure({
 we can get rid of many ES6->ES5 transpilation workarounds that are currently used throughout the ODL project.*
 
 ## TODO
+- fix BSNA plugin
+- unify naming
 - verify that plugins using jquery really work (or better: remove jquery dependency wherever possible)
 - find a way to pass runtime configuration to plugins (e.g. breakpoints, tenant, etc.) ... maybe using some onLoad callback?
-  ```javascript
-  // ...
-  outputPath: '',
-  plugins: {},
-  onBeforeLoad: function (data) {
-    // execute during runtime, _before_ plugins are loaded?
-    data.breakpoint = 'XL_to_XXL';  // ??
-  }
-  // ...
+```javascript
+// ...
+outputPath: '',
+plugins: {},
+onBeforeLoad: function (data) {
+  // execute during runtime, _before_ plugins are loaded?
+  data.breakpoint = 'XL_to_XXL';  // ??
+}
+// ...
 
-  ```
+```
