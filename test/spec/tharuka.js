@@ -1,92 +1,79 @@
 import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/dal/aff/tharuka', () => {
-  let [elementStub, window, dalApi, dalDataMock, dalConfigMock, Service, loggerSpy] = [];
+describe('tharuka', () => {
+  let [mocks, parentContainer, odlApi, odlDataMock, odlConfigMock, Plugin] = [];
 
-  beforeEach((done) => {
-    elementStub = { appendChild: sinon.spy() };
-    window = {
-      Date() { return { getTime() { return 1000000; } }; },
-      document: {
-        querySelector: sinon.stub().returns(elementStub),
-        createElement: sinon.stub().returns(elementStub),
-      },
-      require: sinon.stub().callsArg(1),
-    };
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub('checkout-confirmation');
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub();
-    dalConfigMock = {
+  beforeEach(() => {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub('checkout-confirmation');
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub();
+    odlConfigMock = {
       shopId: 123,
     };
-    // spies
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
     // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/aff/tharuka'));
-    System.import('ba/lib/dal/aff/tharuka').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    mocks = initMocks();
+    mocks.odl.window.require = sinon.stub().callsArg(1);
+    mocks.odl.window.Date = () => ({ getTime: sinon.stub().returns(1000000) });
+    // create fake parent container
+    parentContainer = mocks.odl.window.document.createElement('div');
+    parentContainer.id = 'or-page__confirmation__tharuka';
+    mocks.odl.window.document.querySelector('body').appendChild(parentContainer);
+    // load module
+    return setupModule('./src/plugins/tharuka').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it("shouldn't do anything for any pageType except 'checkout-confirmation'", () => {
-    dalDataMock.page.type = 'homepage';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.isUndefined(window.THFilter);
-    assert.isUndefined(window.THPrefill);
+    odlDataMock.page.type = 'homepage';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.isUndefined(mocks.odl.window.THFilter);
+    assert.isUndefined(mocks.odl.window.THPrefill);
   });
 
-  it('should create a global THFilter object in window with the expected data', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.deepEqual(window.THFilter, {
-      anrede: dalDataMock.order.customer.salutation === 'MR' ? 'Herr' : 'Frau',
-      plz: dalDataMock.order.customer.billingAddress.zip,
-      land: dalDataMock.order.customer.billingAddress.countryCode,
-      gebJahr: dalDataMock.order.customer.birthYear,
-      gutscheincode: dalDataMock.order.couponCode || '',
+  it('should create a global THFilter object in mocks.odl.window with the expected data', () => {
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.deepEqual(mocks.odl.window.THFilter, {
+      anrede: odlDataMock.order.customer.salutation === 'MR' ? 'Herr' : 'Frau',
+      plz: odlDataMock.order.customer.billingAddress.zip,
+      land: odlDataMock.order.customer.billingAddress.countryCode,
+      gebJahr: odlDataMock.order.customer.birthYear,
+      gutscheincode: odlDataMock.order.couponCode || '',
     });
   });
 
-  it('should create a global THPrefill object in window with the expected data', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.deepEqual(window.THPrefill, {
-      anrede: dalDataMock.order.customer.salutation === 'MR' ? 'Herr' : 'Frau',
-      vorname: dalDataMock.order.customer.firstName,
-      name: dalDataMock.order.customer.lastName,
-      strasse: dalDataMock.order.customer.billingAddress.street,
-      hausnummer: dalDataMock.order.customer.billingAddress.houseNr,
-      plz: dalDataMock.order.customer.billingAddress.zip,
-      ort: dalDataMock.order.customer.billingAddress.town,
-      email: dalDataMock.order.customer.email,
-      tel: dalDataMock.order.customer.phone,
-      gebJahr: dalDataMock.order.customer.birthYear,
-      gebTag: dalDataMock.order.customer.birthDate,
+  it('should create a global THPrefill object in mocks.odl.window with the expected data', () => {
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.deepEqual(mocks.odl.window.THPrefill, {
+      anrede: odlDataMock.order.customer.salutation === 'MR' ? 'Herr' : 'Frau',
+      vorname: odlDataMock.order.customer.firstName,
+      name: odlDataMock.order.customer.lastName,
+      strasse: odlDataMock.order.customer.billingAddress.street,
+      hausnummer: odlDataMock.order.customer.billingAddress.houseNr,
+      plz: odlDataMock.order.customer.billingAddress.zip,
+      ort: odlDataMock.order.customer.billingAddress.town,
+      email: odlDataMock.order.customer.email,
+      tel: odlDataMock.order.customer.phone,
+      gebJahr: odlDataMock.order.customer.birthYear,
+      gebTag: odlDataMock.order.customer.birthDate,
     });
   });
 
-  it('should create a div element and set its id to "tharuka"', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window.document.createElement, 'div');
-    assert.equal(elementStub.id, 'tharuka');
-  });
-
-  it('should append the tharuka element to the desired container', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window.document.querySelector, '#or-page__confirmation__tharuka');
-    sinon.assert.calledWith(elementStub.appendChild, elementStub);
+  it('should create a div element, set its id to "tharuka" and add it to the correct container', () => {
+    // instantiate plugin and see if child was created in parent
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    const tharukaDiv = mocks.odl.window.document.querySelector('#tharuka');
+    assert.isObject(tharukaDiv);
+    assert.equal(tharukaDiv.tagName.toLowerCase(), 'div');
+    assert.equal(tharukaDiv.parentNode, parentContainer);
   });
 
   it('should require the tharuka script', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window.require, [`//tharuka-app.de/api/${dalConfigMock.accountId}/tharuka.js`]);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window.require, [`//tharuka-app.de/api/${odlConfigMock.accountId}/tharuka.js`]);
   });
 });
