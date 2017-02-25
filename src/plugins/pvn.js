@@ -1,7 +1,7 @@
 import { Logger, helpers } from 'opendatalayer';
 import $ from 'jquery';
 
-const logger = new Logger('ba/lib/odl/bt/affilinet');
+const logger = new Logger('PVN');
 
 /**
  * PVN pixel ODL plugin
