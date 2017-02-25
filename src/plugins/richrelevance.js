@@ -1,6 +1,7 @@
+/* eslint-disable new-cap */
 import { window, Logger } from 'opendatalayer';
 
-import $ from 'jquery';
+// import $ from 'jquery';
 // import '//media.richrelevance.com/rrserver/js/1.0/p13n.js';
 
 const logger = new Logger('richrelevance');
@@ -51,7 +52,7 @@ export default class Richrelevance {
         let n;
         logger.log('callback triggered ', RR.data.JSON.placements);
         this.dataReceived = true;
-        for (let i = 0; i < this.initCallbacks.length; i++) {
+        for (let i = 0; i < this.initCallbacks.length; i += 1) {
           const cb = this.initCallbacks[i];
           cb(RR.data.JSON.placements);
         }
@@ -72,9 +73,9 @@ export default class Richrelevance {
         });
       };
 
-      // collect placement ids from current page
+      // collect placement ids from current page (no param means check globally)
+      this._scanNodeForPlaceholders();
 
-      this._scanNodeForPlaceholders($('html'));
       // create RR tracking objects depending on current page type
       logger.log('page.type is ', this.data.page.type);
       switch (this.data.page.type) {
@@ -97,14 +98,14 @@ export default class Richrelevance {
           // search? needs keywords and up to 15 item ids
           window.R3_SEARCH = new window.r3_search();
           window.R3_SEARCH.setTerms(this.data.search.keywords);
-          if (this.data.search.ids !== undefined) {
-            const iterable = (this.data.search.ids.split(',')).slice(0, 15);
-            for (let i = 0; i < iterable.length; i++) {
+          if (this.data.search.productIds !== undefined) {
+            const iterable = this.data.search.productIds.slice(0, 15);
+            for (let i = 0; i < iterable.length; i += 1) {
               const id = iterable[i];
               window.R3_SEARCH.addItemId(id);
             }
           } else {
-            logger.log('search.ids not present in ODL');
+            logger.log('search.aonrs not present in ODL');
           }
           break;
         case 'category':
@@ -116,7 +117,7 @@ export default class Richrelevance {
         case 'productdetail':
           // productdetail? needs EAN and category hint in global object
           window.R3_ITEM = new window.r3_item();
-          window.R3_ITEM.setId(this.data.product.productId + '');  // HACK: we need a string to stop RR from throwing errors
+          window.R3_ITEM.setId((this.data.product.productId).toString());  // HACK: we need a string to stop RR from throwing errors
           window.R3_ITEM.setName(this.data.product.name);
           break;
           // window.R3_COMMON.addCategoryHintId @data.product.category # see https://jira.gkh-setu.de/browse/BSNA-384
@@ -129,7 +130,7 @@ export default class Richrelevance {
           // shopping cart? needs product ids
           window.R3_CART = new window.r3_cart();
           if (this.data.cart.products !== undefined) {
-            for (let j = 0; j < this.data.cart.products.length; j++) {
+            for (let j = 0; j < this.data.cart.products.length; j += 1) {
               const p = this.data.cart.products[j];
               window.R3_CART.addItemId(p.productId);
             }
@@ -140,7 +141,7 @@ export default class Richrelevance {
           window.R3_PURCHASED = new window.r3_purchased();
           window.R3_PURCHASED.setOrderNumber(this.data.order.id);
           if (this.data.order.testOrder !== true && this.data.order.products !== undefined) {
-            for (let k = 0; k < this.data.order.products.length; k++) {
+            for (let k = 0; k < this.data.order.products.length; k += 1) {
               const p = this.data.order.products[k];
               window.R3_PURCHASED.addItemIdPriceQuantity(p.productId, p.priceData.totalBeforeDiscount, p.quantity);
             }
@@ -178,7 +179,7 @@ export default class Richrelevance {
     window.R3_COMMON = new window.r3_common();
     window.R3_COMMON.setApiKey(this.config.apiKey);
     window.R3_COMMON.setBaseUrl(baseUrl);
-    window.R3_COMMON.setClickthruServer(window.location.protocol + '//' + window.location.host);
+    window.R3_COMMON.setClickthruServer(`${window.location.protocol}//${window.location.host}`);
     window.R3_COMMON.setSessionId(__guard__(this.data.identity, x1 => x1.bid));
     window.R3_COMMON.setUserId(__guard__(this.data.user, x2 => x2.id) || __guard__(this.data.identity, x3 => x3.bid));
     if (__guard__(this.config, x4 => x4.forceDevMode) === true) {
@@ -190,8 +191,6 @@ export default class Richrelevance {
 
   /**
    * Event handling callback, processes asynchronous events sent by the ODL.
-   *
-   * @method handleEvent
    * @param  {String}  name  name/type of the event
    * @param  {Object}  data  additional data passed to this event
    */
@@ -202,10 +201,10 @@ export default class Richrelevance {
       this._initCommon();
       if (data.layer) { this._scanNodeForPlaceholders(data.layer); }
       // handle async event in RR
-      window.R3_ADDTOCART = new r3_addtocart();
+      window.R3_ADDTOCART = new window.r3_addtocart();
       // pass real product data to RR
       window.R3_ADDTOCART.addItemIdToCart(data.product.productId);
-      r3();
+      window.r3();
     }
   }
 
@@ -235,8 +234,6 @@ export default class Richrelevance {
    *     console.log(placementData.recs[i].name);
    *   }
    * }
-   *
-   * @method addResponseCallback
    * @param  placementName {String}  placement name to listen for
    * @param  callback      {Function}  callback function to be fired (gets placement's name and data passed as arguments)
    */
@@ -260,16 +257,17 @@ export default class Richrelevance {
   /**
    * Scan a given DOM node for gk_recommendation placeholders and add r3common
    * placement types.
-   *
-   * @method _scanNodeForPlaceholder
-   * @private
-   * @param  $el {jQuery}  DOM node to be scanned
+   * @param  el {HTMLElement}  DOM node to be scanned
    */
-  _scanNodeForPlaceholders($el) {
-    return $('meta[name=gk\\:recommendation]', $el).each(function () {
+  _scanNodeForPlaceholders(el) {
+    const metas = (el || window.document.querySelector('html')).querySelectorAll('meta[name=gk\\:recommendation]');
+    for (let i = 0; i < metas.length; i += 1) {
+      window.R3_COMMON.addPlacementType(metas[i].getAttribute('content'));
+    }
+    /* return $('meta[name=gk\\:recommendation]', $el).each(function () {
       logger.log('found RR placement type: ', $(this).attr('content'));
       return window.R3_COMMON.addPlacementType($(this).attr('content'));
-    });
+    });*/
   }
 }
 

@@ -1,49 +1,39 @@
 import { describe, it, beforeEach, afterEach } from 'mocha';
-import { assert } from 'chai';
+// import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../systemjs.config';
-import mockModule from './../../_mockModule';
-import * as dalDataTypes from './../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe('ba/lib/dal/richrelevance', () => {
-  let [Service, dalApi, dalDataMock, loggerSpy, windowSpy] = [];
+describe('richrelevance', () => {
+  let [mocks, Plugin, odlApi, odlDataMock] = [];
 
-  beforeEach((done) => {
-    // create spies
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy(), error: sinon.spy() };
-    windowSpy = { require: sinon.stub().callsArg(1), location: { protocol: 'https:' } };
-    // register mocks
-    mockModule('jquery', {});
-    mockModule('gk/globals/window', windowSpy);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    // mockModule('ba/vendor/richrelevance', {});
-    //mockModule('https://media.richrelevance.com/rrserver/js/1.2/p13n.js', {});
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/richrelevance'));
-    System.import('ba/lib/dal/richrelevance').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+  beforeEach(() => {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    // register mocks and overrides
+    mocks = initMocks();
+    mocks.odl.window.require = sinon.stub().callsArg(1);
+    getJSDOM().changeURL(mocks.odl.window, 'https://example.com/foo');
+    // load module
+    return setupModule('./src/plugins/richrelevance').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it('should handle a not available RR', () => {
     // this test succeeds if there is no error
-    new Service(dalApi, dalDataMock, {});
+    new Plugin(odlApi, odlDataMock, {});
   });
 
   it('should lazy-load the global RR script using window.require', () => {
-    new Service(dalApi, dalDataMock, {});
-    sinon.assert.calledWith(windowSpy.require, ['https://media.richrelevance.com/rrserver/js/1.2/p13n.js']);
+    new Plugin(odlApi, odlDataMock, {});
+    sinon.assert.calledWith(mocks.odl.window.require, ['https://media.richrelevance.com/rrserver/js/1.2/p13n.js']);
   });
 });
 
-describe('ba/lib/dal/richrelevance', () => {
-  let dalApi, dalDataMock, injector, loggerSpy, r3BrandSpy, r3CartMock, r3CategoryMock, r3CommonMock, r3ErrorSpy, r3GenericSpy, r3HomeMock, r3ItemMock, r3Mock, r3PersonalSpy, r3PurchasedMock, r3SearchMock, rrFlushOnLoadMock, Service, window;
-  [injector, Service, window, dalApi, loggerSpy, dalDataMock, r3CommonMock, rrFlushOnLoadMock,
-    r3Mock, r3HomeMock, rrFlushOnLoadMock, r3SearchMock, r3CategoryMock, r3ItemMock, r3PersonalSpy, r3BrandSpy, r3CartMock,
-    r3PurchasedMock, r3ErrorSpy, r3GenericSpy] = [];
-  beforeEach((done) => {
+describe('ba/lib/odl/richrelevance', () => {
+  let [mocks, Plugin, odlApi, odlDataMock, r3CommonMock, r3SearchMock, r3CategoryMock, r3ItemMock, r3CartMock, r3PurchasedMock] = [];
+  beforeEach(() => {
     // mock r3* APIs
     const r3CommonApi = {
       setApiKey() {},
@@ -74,15 +64,8 @@ describe('ba/lib/dal/richrelevance', () => {
       addItemIdPriceQuantity() {},
     };
     r3CommonMock = sinon.mock(r3CommonApi);
-    r3HomeMock = sinon.spy();
-    r3PersonalSpy = sinon.spy();
-    r3BrandSpy = sinon.spy();
-    r3ErrorSpy = sinon.spy();
-    r3GenericSpy = sinon.spy();
     r3SearchMock = sinon.mock(r3SearchApi);
     r3CategoryMock = sinon.mock(r3CategoryApi);
-    rrFlushOnLoadMock = sinon.spy();
-    r3Mock = sinon.spy();
     r3ItemMock = sinon.mock(r3ItemApi);
     r3CartMock = sinon.mock(r3CartApi);
     r3PurchasedMock = sinon.mock(r3PurchasedApi);
@@ -91,49 +74,30 @@ describe('ba/lib/dal/richrelevance', () => {
         return callback();
       },
     };
-    dalDataMock = {
-      identity: { bid: '' },
-      user: { id: '' },
-      page: { type: '' },
-      search: {},
-    };
-    window = {
-      location: {
-        protocol: 'http:',
-        host: 'localhost',
-        pathname: '/richrelevanceService',
-        href: '',
-      },
-      r3_common: () => r3CommonMock.object,
-      r3_search: () => r3SearchMock.object,
-      r3_category: () => r3CategoryMock.object,
-      r3_item: () => r3ItemMock.object,
-      r3_cart: () => r3CartMock.object,
-      r3_purchased: () => r3PurchasedMock.object,
-      r3_personal: r3PersonalSpy,
-      r3_home: r3HomeMock,
-      r3_brand: r3BrandSpy,
-      r3_error: r3ErrorSpy,
-      r3_generic: r3GenericSpy,
-      rr_flush_onload: rrFlushOnLoadMock,
-      r3: r3Mock,
-      RR: () => RrApi,
-      require: sinon.stub().callsArg(1),
-    };
-    const jqApi = () => ({ each: (callback) => callback(), attr: () => 'content' });
-    // create spies
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy(), error: sinon.spy() };
-    // register mocks
-    mockModule('jquery', jqApi);
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    mockModule('ba/vendor/richrelevance', {});
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/richrelevance'));
-    System.import('ba/lib/dal/richrelevance').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    // register mocks and overrides
+    mocks = initMocks();
+    mocks.odl.window.r3_common = () => r3CommonMock.object;
+    mocks.odl.window.r3_search = () => r3SearchMock.object;
+    mocks.odl.window.r3_category = () => r3CategoryMock.object;
+    mocks.odl.window.r3_item = () => r3ItemMock.object;
+    mocks.odl.window.r3_cart = () => r3CartMock.object;
+    mocks.odl.window.r3_purchased = () => r3PurchasedMock.object;
+    mocks.odl.window.r3_personal = sinon.spy();
+    mocks.odl.window.r3_home = sinon.spy();
+    mocks.odl.window.r3_brand = sinon.spy();
+    mocks.odl.window.r3_error = sinon.spy();
+    mocks.odl.window.r3_generic = sinon.spy();
+    mocks.odl.window.rr_flush_onload = sinon.spy();
+    mocks.odl.window.r3 = sinon.spy();
+    mocks.odl.window.RR = () => RrApi;
+    mocks.odl.window.require = sinon.stub().callsArg(1);
+    // load module
+    getJSDOM().changeURL(mocks.odl.window, 'http://localhost/richrelevancePlugin');
+    return setupModule('./src/plugins/richrelevance').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   afterEach(() => {
@@ -152,149 +116,154 @@ describe('ba/lib/dal/richrelevance', () => {
   });
 
   const callRichRelevance = () => {
-    new Service(dalApi, dalDataMock, {});
+    new Plugin(odlApi, odlDataMock, {});
   };
 
-  it('should add placement type when meta is present', () => {
-    r3CommonMock.expects('addPlacementType').withArgs('content');
+  it('should add placement when at least once metatag is present in DOM', () => {
+    // create a recommendation meta element in virtual DOM
+    const meta = mocks.odl.window.document.createElement('meta');
+    const body = mocks.odl.window.document.getElementsByTagName('body')[0];
+    meta.setAttribute('name', 'gk:recommendation');
+    meta.setAttribute('content', 'my_placement_id.foo');
+    body.appendChild(meta);
+    // see if it gets called
+    r3CommonMock.expects('addPlacementType').withArgs('my_placement_id.foo');
     callRichRelevance();
   });
 
   describe('should handle different page types and then call RichRelevance', () => {
     afterEach(() => {
       // watch for these calls for every test in this describe
-      assert.isTrue(rrFlushOnLoadMock.called, 'flushOnLoad called');
-      assert.isTrue(r3Mock.called, 'r3 called');
+      sinon.assert.called(mocks.odl.window.rr_flush_onload);
+      sinon.assert.called(mocks.odl.window.r3);
     });
 
     it('and track the homepage on type homepage', () => {
-      dalDataMock.page.type = 'homepage';
+      odlDataMock.page.type = 'homepage';
       callRichRelevance();
-      assert.isTrue(r3HomeMock.called, 'r3_home called');
+      sinon.assert.called(mocks.odl.window.r3_home);
     });
 
     it('should track r3_personal for type myaccount', () => {
-      dalDataMock.page.type = 'myaccount';
+      odlDataMock.page.type = 'myaccount';
       callRichRelevance();
-      assert.isTrue(r3PersonalSpy.calledOnce);
+      sinon.assert.calledOnce(mocks.odl.window.r3_personal);
     });
 
     it('should track r3_personal for type myaccount-overview', () => {
-      dalDataMock.page.type = 'myaccount-overview';
+      odlDataMock.page.type = 'myaccount-overview';
       callRichRelevance();
-      assert.isTrue(r3PersonalSpy.calledOnce);
+      sinon.assert.calledOnce(mocks.odl.window.r3_personal);
     });
 
     it('should track r3_personal for type myaccount-orders', () => {
-      dalDataMock.page.type = 'myaccount-orders';
+      odlDataMock.page.type = 'myaccount-orders';
       callRichRelevance();
-      assert.isTrue(r3PersonalSpy.calledOnce);
+      sinon.assert.calledOnce(mocks.odl.window.r3_personal);
     });
 
     it('should track r3_generic for type myaccount-logout', () => {
-      dalDataMock.page.type = 'myaccount-logout';
+      odlDataMock.page.type = 'myaccount-logout';
       callRichRelevance();
-      assert.isTrue(r3GenericSpy.called, 'r3_generic called');
+      sinon.assert.called(mocks.odl.window.r3_generic);
     });
 
     it('should track r3_error for type error', () => {
-      dalDataMock.page.type = 'error';
+      odlDataMock.page.type = 'error';
       callRichRelevance();
-      assert.isTrue(r3ErrorSpy.called, 'r3_error called');
+      sinon.assert.called(mocks.odl.window.r3_error);
     });
 
     describe('and track the search for type search', () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'search';
-        dalDataMock.search.keywords = 'Master Key Words';
-        dalDataMock.search.ids = '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16';
+        odlDataMock.page.type = 'search';
+        odlDataMock.search = odlDataTypes.getODLSearchDataStub();
       });
 
       afterEach(() => {
         callRichRelevance();
       });
 
-      it('should set use the terms from DAL to set terms in the search object ', () => {
-        r3SearchMock.expects('setTerms').withArgs('Master Key Words');
+      it('should set use the terms from ODL to set terms in the search object ', () => {
+        r3SearchMock.expects('setTerms').withArgs(odlDataMock.search.keywords);
       });
 
-      it('should add at least 15 of the given IDs from the DAL', () => {
+      it('should add at least 15 of the given IDs from the ODL', () => {
         r3SearchMock.expects('addItemId').atLeast(1).atMost(15);
       });
 
-      it('should react when no IDs are present in the DAL [debug]', () => {
-        dalDataMock.search.ids = undefined;
-        return r3SearchMock.expects('addItemId').never();
+      it('should react when no IDs are present in the ODL [debug]', () => {
+        delete odlDataMock.search.productIds;
+        r3SearchMock.expects('addItemId').never();
       });
     });
 
     describe('and track the category for type category', () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'category';
-        dalDataMock.category = {};
-        dalDataMock.category.id = 23;
-        dalDataMock.category.name = 'Nerdish';
+        odlDataMock.page.type = 'category';
+        odlDataMock.category = odlDataTypes.getODLCategoryDataStub();
       });
 
       afterEach(() => {
         callRichRelevance();
       });
 
-      it('should use the category id from the DAL to set the id in the category object', () => {
-        r3CategoryMock.expects('setId').withArgs(23);
+      it('should use the category id from the ODL to set the id in the category object', () => {
+        r3CategoryMock.expects('setId').withArgs(odlDataMock.category.id);
       });
 
-      it('should use the name from the DAL to set the name in the category object', () => {
-        r3CategoryMock.expects('setName').withArgs('Nerdish');
+      it('should use the name from the ODL to set the name in the category object', () => {
+        r3CategoryMock.expects('setName').withArgs(odlDataMock.category.name);
       });
     });
 
     describe('and track the productdetails for type productdetail', () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'productdetail';
-        dalDataMock.product = {
-          productId: 23,
-          category: 42,
-        };
+        odlDataMock.page.type = 'productdetail';
+        odlDataMock.product = odlDataTypes.getODLProductDataStub(123);
       });
 
       afterEach(() => {
         callRichRelevance();
       });
 
-      it('should use the productId from the DAL as a string to set the id in the Item object', () => {
-        r3ItemMock.expects('setId').withArgs('23');
+      it('should use the productId/name from the ODL as a string to set the id/name in the Item object', () => {
+        // callRichRelevance();
+        // sinon.assert.calledWith(r3ItemMock.setId, odlDataMock.product.productId);
+        r3ItemMock.expects('setId').withArgs((odlDataMock.product.productId).toString());
+        r3ItemMock.expects('setName').withArgs(odlDataMock.product.name);
       });
 
-      // it "should use the product category from the DAL to set the categoryHintId int the common object", ->
-      //  r3CommonMock.expects('addCategoryHintId').withArgs(42)
+      /* it('should use the product category from the ODL to set the categoryHintId int the common object', () => {
+        r3CommonMock.expects('addCategoryHintId').withArgs(odlDataMock.product.category);
+      });*/
     });
 
     describe('and track the brand for type brand', () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'brand';
-        dalDataMock.brand = { name: 'ACME' };
+        odlDataMock.page.type = 'brand';
+        odlDataMock.brand = odlDataTypes.getODLBrandDataStub();
       });
 
       it('should instanciate r3_brand', () => {
         callRichRelevance();
-        assert.isTrue(r3BrandSpy.calledOnce);
+        sinon.assert.calledOnce(mocks.odl.window.r3_brand);
       });
 
-      it('should use the brand from the DAL to set the brand in the common object', () => {
-        r3CommonMock.expects('setPageBrand').withArgs('ACME');
+      it('should use the brand from the ODL to set the brand in the common object', () => {
+        r3CommonMock.expects('setPageBrand').withArgs(odlDataMock.brand.name);
         callRichRelevance();
       });
     });
 
     describe('and track products in the cart for type checkout-cart', () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'checkout-cart';
-        dalDataMock.cart = {};
+        odlDataMock.page.type = 'checkout-cart';
+        odlDataMock.cart = {};
       });
 
-      it('should add two items when two are present in the dal', () => {
-        dalDataMock.cart.products = [
+      it('should add two items when two are present in the odl', () => {
+        odlDataMock.cart.products = [
           { productId: 42 },
           { productId: 23 },
         ];
@@ -306,14 +275,14 @@ describe('ba/lib/dal/richrelevance', () => {
 
     describe('and track products for type checkout-cart', () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'checkout-cart';
-        dalDataMock.cart = {
+        odlDataMock.page.type = 'checkout-cart';
+        odlDataMock.cart = {
           products: [],
         };
       });
 
-      it('should add three items when three are present in the dal', () => {
-        dalDataMock.cart.products = [
+      it('should add three items when three are present in the odl', () => {
+        odlDataMock.cart.products = [
           { productId: 42 },
           { productId: 23 },
         ];
@@ -323,13 +292,13 @@ describe('ba/lib/dal/richrelevance', () => {
         callRichRelevance();
       });
 
-      it('should not add items when products list in the dal is empty', () => {
-        dalDataMock.cart.products = [];
+      it('should not add items when products list in the odl is empty', () => {
+        odlDataMock.cart.products = [];
         r3CartMock.expects('addItemId').never();
         callRichRelevance();
       });
 
-      it('should not add items when products list in the dal is not available', () => {
+      it('should not add items when products list in the odl is not available', () => {
         r3CartMock.expects('addItemId').never();
         callRichRelevance();
       });
@@ -337,12 +306,12 @@ describe('ba/lib/dal/richrelevance', () => {
 
     describe("should track the orders' products for type checkout-confirmation", () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'checkout-confirmation';
-        dalDataMock.order = {};
+        odlDataMock.page.type = 'checkout-confirmation';
+        odlDataMock.order = {};
       });
 
-      it('should add two items when two are present in the dal', () => {
-        dalDataMock.order.products = [
+      it('should add two items when two are present in the odl', () => {
+        odlDataMock.order.products = [
           {
             productId: 23,
             priceData: {
@@ -363,19 +332,19 @@ describe('ba/lib/dal/richrelevance', () => {
         callRichRelevance();
       });
 
-      it('should not add items are not available in the dal', () => {
+      it('should not add items are not available in the odl', () => {
         r3PurchasedMock.expects('addItemIdPriceQuantity').never();
         callRichRelevance();
       });
 
-      it('should not add items are when the list in the dal is empty', () => {
-        dalDataMock.order.products = [];
+      it('should not add items are when the list in the odl is empty', () => {
+        odlDataMock.order.products = [];
         r3PurchasedMock.expects('addItemIdPriceQuantity').never();
         callRichRelevance();
       });
 
       it('should not track test orders', () => {
-        dalDataMock.order.testOrder = true;
+        odlDataMock.order.testOrder = true;
         r3PurchasedMock.expects('addItemIdPriceQuantity').never();
         callRichRelevance();
       });
