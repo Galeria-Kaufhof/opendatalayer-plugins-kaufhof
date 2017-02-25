@@ -28,6 +28,7 @@ we can get rid of many ES6->ES5 transpilation workarounds that are currently use
 - unify naming
 - verify that plugins using jquery really work (or better: remove jquery dependency wherever possible)
 - find a way to pass runtime configuration to plugins (e.g. breakpoints, tenant, etc.) ... maybe using some onLoad callback?
+
 ```javascript
 // ...
 outputPath: '',
