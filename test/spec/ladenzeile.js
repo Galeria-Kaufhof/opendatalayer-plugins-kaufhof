@@ -1,72 +1,62 @@
 import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/dal/bt/ladenzeile', () => {
-  let [window, Service, dalApi, dalDataMock, dalConfigMock, pixelHelperSpy, loggerSpy, p1, p2, p3] = [];
+describe('ba/lib/odl/bt/ladenzeile', () => {
+  let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock, p1, p2, p3] = [];
 
-  beforeEach((done) => {
-    window = {};
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub('checkout-confirmation');
-    [p1, p2, p3] = [dalDataTypes.getDALProductDataStub(123), dalDataTypes.getDALProductDataStub(456), dalDataTypes.getDALProductDataStub(789)];
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub([p1, p2, p3]);
-    dalConfigMock = {
+  beforeEach(() => {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub('checkout-confirmation');
+    [p1, p2, p3] = [odlDataTypes.getODLProductDataStub(123), odlDataTypes.getODLProductDataStub(456), odlDataTypes.getODLProductDataStub(789)];
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub([p1, p2, p3]);
+    odlConfigMock = {
       trackingId: 'foo-1234',
       currency: 'MY$',
     };
-    // spies
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
-    pixelHelperSpy = { addScript: sinon.spy() };
-    // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    mockModule('ba/lib/pixelHelper', pixelHelperSpy);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/bt/ladenzeile'));
-    System.import('ba/lib/dal/bt/ladenzeile').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    // register mocks and overrides
+    mocks = initMocks();
+    // load module
+    return setupModule('./src/plugins/ladenzeile').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it("should add the pixel for pageType 'checkout-confirmation'", () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(pixelHelperSpy.addScript, '//www.ladenzeile.de/controller/visualMetaTrackingJs');
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.helpers.addScript, '//www.ladenzeile.de/controller/visualMetaTrackingJs');
   });
 
   it('should NOT add the pixel for any other pageType', () => {
-    dalDataMock.page.type = 'homepage';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.notCalled(pixelHelperSpy.addScript);
+    odlDataMock.page.type = 'homepage';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.notCalled(mocks.odl.helpers.addScript);
   });
 
   it('should add the expected trackingId in window.vmt_pi', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.equal(window.vmt_pi.trackingId, dalConfigMock.trackingId);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.equal(mocks.odl.window.vmt_pi.trackingId, odlConfigMock.trackingId);
   });
 
   it('should add the expected order value in window.vmt_pi', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.equal(window.vmt_pi.amount, dalDataMock.order.priceData.total);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.equal(mocks.odl.window.vmt_pi.amount, odlDataMock.order.priceData.total);
   });
 
   it('should set the product SKUs in window.vmt_pi', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.deepEqual(window.vmt_pi.skus, [p1.ean, p2.ean, p3.ean]);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.deepEqual(mocks.odl.window.vmt_pi.skus, [p1.ean, p2.ean, p3.ean]);
   });
 
   it('should set the product prices in window.vmt_pi', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.deepEqual(window.vmt_pi.prices, [p1.priceData.net, p2.priceData.net, p3.priceData.net]);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.deepEqual(mocks.odl.window.vmt_pi.prices, [p1.priceData.net, p2.priceData.net, p3.priceData.net]);
   });
 
   it('should pass expected currency in window.vmt_pi', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.equal(window.vmt_pi.currency, dalConfigMock.currency);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.equal(mocks.odl.window.vmt_pi.currency, odlConfigMock.currency);
   });
 });
