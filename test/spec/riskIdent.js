@@ -1,67 +1,58 @@
 import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/dal/aff/riskIdent', () => {
-  let [window, dalApi, dalDataMock, dalConfigMock, Service, loggerSpy, pixelHelperApi] = [];
+describe('ba/lib/odl/aff/riskIdent', () => {
+  let [mocks, odlApi, odlDataMock, odlConfigMock, Plugin] = [];
 
-  beforeEach((done) => {
+  beforeEach(() => {
     // mocks
-    window = {};
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub('checkout-confirmation');
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub();
-    dalConfigMock = { diSite: 'blaBlubb' };
-    // spies
-    pixelHelperApi = { addScript: sinon.stub(), addHTML: sinon.spy() };
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
-    // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    mockModule('ba/lib/pixelHelper', pixelHelperApi);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/aff/riskIdent'));
-    System.import('ba/lib/dal/aff/riskIdent').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub('checkout-confirmation');
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub();
+    odlConfigMock = { diSite: 'blaBlubb' };
+    // register mocks and overrides
+    mocks = initMocks();
+    mocks.odl.window._trboq = { push: sinon.spy() };
+    // load module
+    return setupModule('./src/plugins/riskIdent').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it("should do nothing if the pageType isnt 'checkout-confirmation'", () => {
-    dalDataMock.page.type = 'something';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.isUndefined(window.di);
+    odlDataMock.page.type = 'something';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.isUndefined(mocks.odl.window.di);
   });
 
   it("should define the global di if pageType is 'checkout-confirmation'", () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.deepEqual(window.di, {
-      t: dalDataMock.order.id,
-      v: dalConfigMock.diSite,
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.deepEqual(mocks.odl.window.di, {
+      t: odlDataMock.order.id,
+      v: odlConfigMock.diSite,
       l: 'Checkout',
     });
   });
 
   it('should add the DI script', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(pixelHelperApi.addScript, `//www.jsctool.com/${dalConfigMock.diSite}/di.js`);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.helpers.addScript, `//www.jsctool.com/${odlConfigMock.diSite}/di.js`);
   });
 
   it('should add the DI SWF', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(pixelHelperApi.addHTML, 'BODY', sinon.match('flashvars'));
-    sinon.assert.calledWith(pixelHelperApi.addHTML, 'BODY', sinon.match(dalConfigMock.diSite));
-    sinon.assert.calledWith(pixelHelperApi.addHTML, 'BODY', sinon.match(dalDataMock.order.id.toString()));
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.helpers.addHTML, 'BODY', sinon.match('flashvars'));
+    sinon.assert.calledWith(mocks.odl.helpers.addHTML, 'BODY', sinon.match(odlConfigMock.diSite));
+    sinon.assert.calledWith(mocks.odl.helpers.addHTML, 'BODY', sinon.match(odlDataMock.order.id.toString()));
   });
 
   return it('should add the DI CSS', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(pixelHelperApi.addHTML, 'BODY', sinon.match('stylesheet'));
-    sinon.assert.calledWith(pixelHelperApi.addHTML, 'BODY', sinon.match('jsctool'));
-    sinon.assert.calledWith(pixelHelperApi.addHTML, 'BODY', sinon.match(dalConfigMock.diSite));
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.helpers.addHTML, 'BODY', sinon.match('stylesheet'));
+    sinon.assert.calledWith(mocks.odl.helpers.addHTML, 'BODY', sinon.match('jsctool'));
+    sinon.assert.calledWith(mocks.odl.helpers.addHTML, 'BODY', sinon.match(odlConfigMock.diSite));
   });
 });
