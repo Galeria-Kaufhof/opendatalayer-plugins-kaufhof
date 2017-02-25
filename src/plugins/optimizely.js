@@ -4,20 +4,16 @@ import { window } from 'opendatalayer';
 /**
  * optimizely ODL plugin
  *
- * Includes optimizely lib and hands over conversion data when on checkout-comnfirmation page
- *
- * @module   gk.lib.odl
- * @class    Optimizely
- * @implements  IODLService
+ * Includes optimizely lib and hands over conversion data when on checkout-comnfirmation page.
  */
 export default class Optimizely {
 
   /**
    * Fired when the plugin is loaded by the ODL (during or after DOM load)
    *
-   * @param  {gk.lib.ODL}  odl     the global ODL instance
-   * @param  {Object}      data    the global ODL data object (as returned by ODL.getData)
-   * @param  {Object}      config  custom configuration for this service
+   * @param  {ODL}      odl     the global ODL instance
+   * @param  {Object}   data    the global ODL data object (as returned by ODL.getData)
+   * @param  {Object}   config  custom configuration for this service
    */
   constructor(odl, data, config) {
     if (data.page.type === 'checkout-confirmation') {
