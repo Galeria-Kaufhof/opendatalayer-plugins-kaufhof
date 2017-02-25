@@ -1,47 +1,36 @@
 import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 // import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../systemjs.config';
-import * as dalDataTypes from './../../../mocks/dalDataTypes';
-import mockModule from './../../_mockModule';
-import domMock from './../../../mocks/domMock';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/dal/mouseflow', () => {
-  let [windowSpy, Service, dalApi, dalDataMock, dalConfigMock] = [];
+describe('mouseflow', () => {
+  let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock] = [];
 
-  beforeEach((done) => {
-    windowSpy = domMock;
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub();
-    dalConfigMock =
-      { uuid: 'kasjhf-asf-asf-as-fa-sf-asf' };
+  beforeEach(() => {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    odlConfigMock = { uuid: 'kasjhf-asf-asf-as-fa-sf-asf' };
     // create mocks
-    dalDataMock = {
-      page: { type: 'unittest', name: 'Testpage' },
-      site: { id: 'jump_dev' },
-      user: { id: null },
-    };
-    // register mocks
-    mockModule('gk/globals/window', windowSpy);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/mouseflow'));
-    System.import('ba/lib/dal/mouseflow').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    // register mocks and overrides
+    mocks = initMocks();
+    // load module
+    return setupModule('./src/plugins/mouseflow').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it('should create a global window._mfq array', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.isArray(windowSpy._mfq);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.isArray(mocks.odl.window._mfq);
   });
 
   it('should create the Mouseflow script element and add it to the DOM', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.isDefined(domMock.createdEl);
-    assert.equal(domMock.createdEl.tagName, 'script');
-    assert.equal(domMock.createdEl.src, `//cdn.mouseflow.com/projects/${dalConfigMock.uuid}.js`);
-    assert.equal(domMock.appendedEl, domMock.createdEl);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    const mfElement = mocks.odl.window.document.getElementsByTagName('script')[0];
+    assert.isDefined(mfElement);
+    assert.equal(mfElement.tagName.toLowerCase(), 'script');
+    assert.equal(mfElement.src, `//cdn.mouseflow.com/projects/${odlConfigMock.uuid}.js`);
   });
 });
