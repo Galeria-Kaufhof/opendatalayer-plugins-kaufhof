@@ -1,101 +1,79 @@
 import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/dal/aff/sovendus', () => {
-  let [window, dalApi, dalDataMock, dalConfigMock, pixelHelperApi, Service, loggerSpy] = [];
+describe('sovendus', () => {
+  let [mocks, odlApi, odlDataMock, odlConfigMock, Plugin] = [];
 
-  beforeEach(function (done) {
-    window = {
-      Date() {
-        return {
-          getTime() {
-            return 1000000;
-          },
-        };
-      },
-    };
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub('checkout-confirmation');
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub();
-    dalConfigMock = {
+  beforeEach(() => {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub('checkout-confirmation');
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub();
+    odlConfigMock = {
       shopId: 123,
       currency: 'MY$',
     };
-    // spies
-    pixelHelperApi = { addScript: sinon.stub(), addHTML: sinon.spy() };
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
     // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    mockModule('ba/lib/pixelHelper', pixelHelperApi);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/aff/sovendus'));
-    System.import('ba/lib/dal/aff/sovendus').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    mocks = initMocks();
+    mocks.odl.window.Date = () => ({ getTime: sinon.stub().returns(1000000) });
+    // load module
+    return setupModule('./src/plugins/sovendus').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it("shouldn't do anything for any pageType except 'checkout-confirmation'", () => {
-    dalDataMock.page.type = 'homepage';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.isUndefined(window._gconData);
+    odlDataMock.page.type = 'homepage';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.isUndefined(mocks.odl.window._gconData);
   });
 
-  it('should create a global _gconData in window', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.isArray(window._gconData);
+  it('should create a global _gconData in mocks.odl.window', () => {
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.isArray(mocks.odl.window._gconData);
   });
 
   it('should add the container element to the correct parent', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(pixelHelperApi.addHTML, sinon.match('page__confirmation__sovendus'), sinon.match('gutscheinconnection-container1'));
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.helpers.addHTML, sinon.match('page__confirmation__sovendus'), sinon.match('gutscheinconnection-container1'));
   });
 
   it('should push all required base data to the global _gconData object', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.deepEqual(window._gconData, [
-      ['_shopId', dalConfigMock.shopId],
-      ['_bannerId', dalConfigMock.bannerId],
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.deepEqual(mocks.odl.window._gconData, [
+      ['_shopId', odlConfigMock.shopId],
+      ['_bannerId', odlConfigMock.bannerId],
       ['_sessionId', ''],
       ['_timestamp', 1000],
-      ['_customerSalutation', dalDataMock.order.customer.salutation === 'MR' ? 'Herr' : 'Frau'],
-      ['_customerFirstName', dalDataMock.order.customer.firstName],
-      ['_customerLastName', dalDataMock.order.customer.lastName],
-      ['_customerEmail', dalDataMock.order.customer.email],
-      ['_orderId', dalDataMock.order.id],
-      ['_orderValue', dalDataMock.order.priceData.net],
-      ['_orderCurrency', dalConfigMock.currency],
+      ['_customerSalutation', odlDataMock.order.customer.salutation === 'MR' ? 'Herr' : 'Frau'],
+      ['_customerFirstName', odlDataMock.order.customer.firstName],
+      ['_customerLastName', odlDataMock.order.customer.lastName],
+      ['_customerEmail', odlDataMock.order.customer.email],
+      ['_orderId', odlDataMock.order.id],
+      ['_orderValue', odlDataMock.order.priceData.net],
+      ['_orderCurrency', odlConfigMock.currency],
       ['_usedCouponCode', ''],
       ['_checksum', ''],
       ['_htmlElementId', 'gutscheinconnection-container1'],
     ]);
-  }
-  );
+  });
 
   it('should set the correct salutation for women', () => {
-    dalDataMock.order.customer.salutation = 'MRS';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.include(JSON.stringify(window._gconData), JSON.stringify(['_customerSalutation', 'Frau']));
-  }
-  );
+    odlDataMock.order.customer.salutation = 'MRS';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.include(JSON.stringify(mocks.odl.window._gconData), JSON.stringify(['_customerSalutation', 'Frau']));
+  });
 
   it('should set a coupon code', () => {
-    dalDataMock.order.couponCode = 'BLARG';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    assert.include(JSON.stringify(window._gconData), JSON.stringify(['_usedCouponCode', 'BLARG']));
-  }
-  );
+    odlDataMock.order.couponCode = 'BLARG';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    assert.include(JSON.stringify(mocks.odl.window._gconData), JSON.stringify(['_usedCouponCode', 'BLARG']));
+  });
 
-  return it('should add the script to the DOM', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(pixelHelperApi.addScript, '//api.gutscheinconnection.de/js/client.js');
-  }
-  );
-}
-);
+  it('should add the script to the DOM', () => {
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.helpers.addScript, '//api.gutscheinconnection.de/js/client.js');
+  });
+});

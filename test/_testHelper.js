@@ -30,7 +30,7 @@ export function initMocks(mapping = {}) {
     odl: {
       window: jsdom.jsdom('<html><body></body></html>').defaultView,
       Logger: () => loggerSpy,
-      helpers: { addScript: sinon.spy(), addImage: sinon.spy() },
+      helpers: { addScript: sinon.spy(), addImage: sinon.spy(), addHTML: sinon.spy() },
       cookie: { get: sinon.stub(), set: sinon.stub() },
     },
     logger: loggerSpy,
