@@ -3,7 +3,7 @@ import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
-import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
 describe('shoppingcom', () => {
   let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock, p1, p2, p3] = [];
@@ -17,7 +17,6 @@ describe('shoppingcom', () => {
     // register mocks and overrides
     mocks = initMocks();
     mocks.odl.window._roi = { push: sinon.spy() };
-    // getJSDOM().changeURL(mocks.odl.window, 'https://example.com/foo');
     // load module
     return setupModule('./src/plugins/shoppingcom').then(() => {
       Plugin = getPluginConstructor();
