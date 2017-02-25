@@ -1,58 +1,48 @@
 import { describe, it, beforeEach } from 'mocha';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/dal/bt/psm', () => {
-  let [window, Service, loggerSpy, dalApi, dalDataMock, dalConfigMock, p1, p2, p3, A3320Api] = [];
+describe('psm', () => {
+  let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock, p1, p2, p3, A3320Api] = [];
 
-  beforeEach((done) => {
-    window = { encodeURIComponent(s) { return s; } };
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub('checkout-confirmation');
-    [p1, p2, p3] = [dalDataTypes.getDALProductDataStub(123), dalDataTypes.getDALProductDataStub(456), dalDataTypes.getDALProductDataStub(789)];
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub([p1, p2, p3]);
-    dalConfigMock =
-      { advertiserId: 123 };
-    // spies
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
+  beforeEach(() => {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub('checkout-confirmation');
+    [p1, p2, p3] = [odlDataTypes.getODLProductDataStub(123), odlDataTypes.getODLProductDataStub(456), odlDataTypes.getODLProductDataStub(789)];
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub([p1, p2, p3]);
+    odlConfigMock = { advertiserId: 123 };
+    // register mocks and overrides
     A3320Api = { trackEvent: sinon.spy() };
-    // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    mockModule('ba/vendor/A3320_tracking', A3320Api);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/bt/psm'));
-    System.import('ba/lib/dal/bt/psm').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    mocks = initMocks({ './src/lib/A3320_tracking': A3320Api });
+    // load module
+    return setupModule('./src/plugins/psm').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
-  it("should add the pixel for pageType 'checkout-confirmation' and pass the relevant data", () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
+  it('should add the pixel for pageType "checkout-confirmation" and pass the relevant data', () => {
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
     sinon.assert.calledWith(A3320Api.trackEvent, sinon.match({
-      billing_advid: dalConfigMock.advertiserId,
-      billing_orderid: dalDataMock.order.id,
-      billing_sum: dalDataMock.order.priceData.net,
+      billing_advid: odlConfigMock.advertiserId,
+      billing_orderid: odlDataMock.order.id,
+      billing_sum: odlDataMock.order.priceData.net,
     }));
   });
 
   it('should NOT add the pixel for any other pageType', () => {
-    dalDataMock.page.type = 'homepage';
-    new Service(dalApi, dalDataMock, dalConfigMock);
+    odlDataMock.page.type = 'homepage';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
     sinon.assert.notCalled(A3320Api.trackEvent);
   });
 
   it('should provide the expected products to trackEvent', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
     sinon.assert.calledWith(A3320Api.trackEvent, sinon.match({
       ec_Event: [
-        ['buy', p1.ean, p1.name, p1.priceData.net, window.encodeURIComponent(p1.category), p1.quantity, 'NULL', 'NULL', 'NULL'],
-        ['buy', p2.ean, p2.name, p2.priceData.net, window.encodeURIComponent(p2.category), p2.quantity, 'NULL', 'NULL', 'NULL'],
-        ['buy', p3.ean, p3.name, p3.priceData.net, window.encodeURIComponent(p3.category), p3.quantity, 'NULL', 'NULL', 'NULL'],
+        ['buy', p1.ean, p1.name, p1.priceData.net, mocks.odl.window.encodeURIComponent(p1.category), p1.quantity, 'NULL', 'NULL', 'NULL'],
+        ['buy', p2.ean, p2.name, p2.priceData.net, mocks.odl.window.encodeURIComponent(p2.category), p2.quantity, 'NULL', 'NULL', 'NULL'],
+        ['buy', p3.ean, p3.name, p3.priceData.net, mocks.odl.window.encodeURIComponent(p3.category), p3.quantity, 'NULL', 'NULL', 'NULL'],
       ],
     }));
   });

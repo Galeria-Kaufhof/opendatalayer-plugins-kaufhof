@@ -1,7 +1,7 @@
 import { window, Logger } from 'opendatalayer';
 import A3320 from './../lib/A3320_tracking';
 
-const logger = new Logger('ba/lib/odl/bt/psm');
+const logger = new Logger('psm');
 
 /**
  * PSM ODL plugin
