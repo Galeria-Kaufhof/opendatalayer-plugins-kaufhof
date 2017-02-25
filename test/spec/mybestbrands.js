@@ -2,25 +2,25 @@
 // they supply to their customers
 
 /*
-Squire = require("../../../_squire")
-chai = require("chai")
-sinon = require("sinon")
-assert = chai.assert
-dalDataTypes = require("../../../../mocks/dalDataTypes")
+import { describe, it, beforeEach, afterEach } from 'mocha';
+// import { assert } from 'chai';
+import * as sinon from 'sinon';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe "ba/lib/dal/bt/mybestbrands", ->
-  [injector, window, service, dalApi, dalDataMock, dalConfigMock, p1, p2, p3] = []
+describe "ba/lib/odl/bt/mybestbrands", ->
+  [injector, window, service, odlApi, odlDataMock, odlConfigMock, p1, p2, p3] = []
 
   beforeEach (done) ->
     window =
       document:
         location:
           protocol: "https"
-    dalApi = {}
-    dalDataMock = dalDataTypes.getDALGlobalDataStub("checkout-confirmation")
-    [p1, p2, p3] = [dalDataTypes.getDALProductDataStub(123), dalDataTypes.getDALProductDataStub(456), dalDataTypes.getDALProductDataStub(789)]
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub([p1, p2, p3])
-    dalConfigMock =
+    odlApi = {}
+    odlDataMock = odlDataTypes.getODLGlobalDataStub("checkout-confirmation")
+    [p1, p2, p3] = [odlDataTypes.getODLProductDataStub(123), odlDataTypes.getODLProductDataStub(456), odlDataTypes.getODLProductDataStub(789)]
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub([p1, p2, p3])
+    odlConfigMock =
       advId: "foo-1234"
       trcDomain: "bla.blubb.test"
       currency: "MY$"
@@ -28,32 +28,32 @@ describe "ba/lib/dal/bt/mybestbrands", ->
     injector.mock
       "gk/lib/logger": -> {log:->}
       "gk/globals/window": window
-    injector.require ["ba/lib/dal/bt/mybestbrands"], (module) ->
+    injector.require ["ba/lib/odl/bt/mybestbrands"], (module) ->
       service = module
       done()
 
   it "should add the pixel for pageType 'checkout-confirmation'", ->
-    new service(dalApi, dalDataMock, dalConfigMock)
+    new service(odlApi, odlDataMock, odlConfigMock)
     assert.isDefined(window.itsConv)
 
   it "should NOT add the pixel for any other pageType", ->
-    dalDataMock.page.type = "homepage"
-    new service(dalApi, dalDataMock, dalConfigMock)
+    odlDataMock.page.type = "homepage"
+    new service(odlApi, odlDataMock, odlConfigMock)
     assert.isUndefined(window.itsConv)
 
   it "should add the expected global configuration in window.itsConv", ->
-    new service(dalApi, dalDataMock, dalConfigMock)
-    assert.equal(window.itsConv.advId, dalConfigMock.advId, "itsConv.advId missing")
-    assert.equal(window.itsConv.trcDomain, dalConfigMock.trcDomain, "itsConv.trcDomain missing")
+    new service(odlApi, odlDataMock, odlConfigMock)
+    assert.equal(window.itsConv.advId, odlConfigMock.advId, "itsConv.advId missing")
+    assert.equal(window.itsConv.trcDomain, odlConfigMock.trcDomain, "itsConv.trcDomain missing")
 
   it "should add the expected order information in window.itsConv", ->
-    new service(dalApi, dalDataMock, dalConfigMock)
-    assert.equal(window.itsConv.convId, dalDataMock.order.id, "itsConv.convId missing")
-    assert.equal(window.itsConv.ordValue, dalDataMock.order.priceData.net, "itsConv.ordValue missing")
-    assert.equal(window.itsConv.ordCurr, dalConfigMock.currency, "itsConv.ordCurr missing")
+    new service(odlApi, odlDataMock, odlConfigMock)
+    assert.equal(window.itsConv.convId, odlDataMock.order.id, "itsConv.convId missing")
+    assert.equal(window.itsConv.ordValue, odlDataMock.order.priceData.net, "itsConv.ordValue missing")
+    assert.equal(window.itsConv.ordCurr, odlConfigMock.currency, "itsConv.ordCurr missing")
 
   it "should add the expected products in window.itsConv", ->
-    new service(dalApi, dalDataMock, dalConfigMock)
+    new service(odlApi, odlDataMock, odlConfigMock)
     assert.deepEqual(JSON.parse(window.itsConv.basket), [
       {"pid": p1.ean, "prn": p1.name, "pri": p1.priceData.net, "qty": p1.quantity, "trc": "basket"}
       {"pid": p2.ean, "prn": p2.name, "pri": p2.priceData.net, "qty": p2.quantity, "trc": "basket"}
