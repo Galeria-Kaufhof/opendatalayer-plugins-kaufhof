@@ -1,103 +1,96 @@
 /* eslint-disable no-underscore-dangle */
 import { describe, it, beforeEach } from 'mocha';
-import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../systemjs.config';
-import mockModule from './../../_mockModule';
-import * as dalDataTypes from './../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe('ba/lib/dal/trbo', () => {
-  let [window, dalApi, dalDataMock, dalConfigMock, gkConfigMock, pixelHelperMock, Service] = [];
+describe('ba/lib/odl/trbo', () => {
+  let [mocks, odlApi, odlDataMock, odlConfigMock, gkConfigMock, Plugin] = [];
 
-  beforeEach((done) => {
+  beforeEach(() => {
     // mock data
-    window = {
-      location: { protocol: 'https:' },
-      _trboq: { push: sinon.spy() },
-    };
-    pixelHelperMock = { addScript: sinon.spy() };
     gkConfigMock = { isAppContext: false, focMode: 0 };
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub();
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub();
-    dalConfigMock = { scriptUrl: 'trboscript.foo' };
-    // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/config', gkConfigMock);
-    mockModule('ba/lib/pixelHelper', pixelHelperMock);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/trbo'));
-    System.import('ba/lib/dal/trbo').then((m) => {
-      Service = m.default;
-      done();
-    }).catch((err) => { console.error(err); });
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub();
+    odlConfigMock = { scriptUrl: 'trboscript.foo' };
+    // register mocks and overrides
+    mocks = initMocks();
+    mocks.odl.window._trboq = { push: sinon.spy() };
+    getJSDOM().changeURL(mocks.odl.window, 'https://example.com/foo');
+    // load module
+    return setupModule('./src/plugins/trbo').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it('should add the pixel to DOM on any page', () => {
-    dalDataMock.page.type = 'foo';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(pixelHelperMock.addScript, 'trboscript.foo');
+    odlDataMock.page.type = 'foo';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.helpers.addScript, 'trboscript.foo');
   });
+
+  /* @FIXME: add to configuration/rules
 
   it('should NOT add the pixel to DOM if in appContext', () => {
     gkConfigMock.isAppContext = true;
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.notCalled(pixelHelperMock.addScript);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.notCalled(mocks.odl.helpers.addScript);
   });
 
   it('should NOT add the pixel to DOM if in focMode', () => {
     gkConfigMock.focMode = 1;
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.notCalled(pixelHelperMock.addScript);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.notCalled(mocks.odl.helpers.addScript);
   });
+  */
 
   it('should track a pageview on "homepage"', () => {
-    dalDataMock.page.type = 'homepage';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._trboq.push, ['page', { type: 'home' }]);
+    odlDataMock.page.type = 'homepage';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['page', { type: 'home' }]);
   });
 
   it('should track a pageview on "search"', () => {
-    dalDataMock.page.type = 'search';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._trboq.push, ['page', { type: 'search' }]);
+    odlDataMock.page.type = 'search';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['page', { type: 'search' }]);
   });
 
   it('should track a pageview on "category"', () => {
-    dalDataMock.page.type = 'category';
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._trboq.push, ['page', { type: 'category' }]);
+    odlDataMock.page.type = 'category';
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['page', { type: 'category' }]);
   });
 
   it('should track a pageview and product data on "productdetail"', () => {
-    dalDataMock.page.type = 'productdetail';
-    dalDataMock.product = dalDataTypes.getDALProductDataStub();
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._trboq.push, ['page', { type: 'detail' }]);
-    sinon.assert.calledWith(window._trboq.push, ['productView', {
+    odlDataMock.page.type = 'productdetail';
+    odlDataMock.product = odlDataTypes.getODLProductDataStub();
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['page', { type: 'detail' }]);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['productView', {
       products: [
         {
-          product_id: dalDataMock.product.aonr,
-          name: dalDataMock.product.name,
-          price: dalDataMock.product.priceData.total,
+          product_id: odlDataMock.product.aonr,
+          name: odlDataMock.product.name,
+          price: odlDataMock.product.priceData.total,
         },
       ],
     }]);
   });
 
   it('should track a pageview and cart data on "checkout-cart"', () => {
-    dalDataMock.page.type = 'checkout-cart';
-    dalDataMock.cart = dalDataTypes.getDALCartDataStub([
-      dalDataTypes.getDALCartProductDataStub(123),
-      dalDataTypes.getDALCartProductDataStub(456),
-      dalDataTypes.getDALCartProductDataStub(789),
+    odlDataMock.page.type = 'checkout-cart';
+    odlDataMock.cart = odlDataTypes.getODLCartDataStub([
+      odlDataTypes.getODLCartProductDataStub(123),
+      odlDataTypes.getODLCartProductDataStub(456),
+      odlDataTypes.getODLCartProductDataStub(789),
     ]);
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._trboq.push, ['page', { type: 'basket' }]);
-    sinon.assert.calledWith(window._trboq.push, ['basket', {
-      value: dalDataMock.cart.priceData.total,
-      products: dalDataMock.cart.products.map((p) => {
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['page', { type: 'basket' }]);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['basket', {
+      value: odlDataMock.cart.priceData.total,
+      products: odlDataMock.cart.products.map((p) => {
         return {
           product_id: p.aonr,
           name: p.name,
@@ -109,19 +102,19 @@ describe('ba/lib/dal/trbo', () => {
   });
 
   it('should track a pageview and cart data on "checkout-confirmation"', () => {
-    dalDataMock.page.type = 'checkout-confirmation';
-    dalDataMock.order = dalDataTypes.getDALOrderDataStub([
-      dalDataTypes.getDALCartProductDataStub(123),
-      dalDataTypes.getDALCartProductDataStub(456),
-      dalDataTypes.getDALCartProductDataStub(789),
+    odlDataMock.page.type = 'checkout-confirmation';
+    odlDataMock.order = odlDataTypes.getODLOrderDataStub([
+      odlDataTypes.getODLCartProductDataStub(123),
+      odlDataTypes.getODLCartProductDataStub(456),
+      odlDataTypes.getODLCartProductDataStub(789),
     ]);
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window._trboq.push, ['page', { type: 'confirmation' }]);
-    sinon.assert.calledWith(window._trboq.push, ['sale', {
-      order_id: dalDataMock.order.id,
-      value: dalDataMock.order.priceData.total,
-      coupon_code: dalDataMock.order.couponCode,
-      products: dalDataMock.order.products.map((p) => {
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['page', { type: 'confirmation' }]);
+    sinon.assert.calledWith(mocks.odl.window._trboq.push, ['sale', {
+      order_id: odlDataMock.order.id,
+      value: odlDataMock.order.priceData.total,
+      coupon_code: odlDataMock.order.couponCode,
+      products: odlDataMock.order.products.map((p) => {
         return {
           product_id: p.aonr,
           name: p.name,
