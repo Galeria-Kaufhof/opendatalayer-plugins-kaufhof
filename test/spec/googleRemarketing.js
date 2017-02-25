@@ -1,53 +1,44 @@
 import { describe, it, beforeEach } from 'mocha';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../../systemjs.config';
-import mockModule from './../../../_mockModule';
-import * as dalDataTypes from './../../../../mocks/dalDataTypes';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe('ba/lib/dal/aff/googleRemarketing', () => {
-  let [window, dalApi, dalDataMock, dalConfigMock, Service, loggerSpy] = [];
+describe('ba/lib/odl/aff/googleRemarketing', () => {
+  let [mocks, odlApi, odlDataMock, odlConfigMock, Plugin] = [];
 
-  beforeEach((done) => {
-    window = {
-      location: { protocol: 'https:' },
-      require: sinon.stub().callsArg(1),
-      google_trackConversion: sinon.stub(),
-    };
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub();
-    dalConfigMock = {
+  beforeEach(() => {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    odlConfigMock = {
       conversionId: 12345,
       conversionLabel: 'blablubb',
     };
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
-    // register mocks
-    mockModule('gk/globals/window', window);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    // mockModule('https://www.googleadservices.com/pagead/conversion_async.js', {});
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/aff/googleRemarketing'));
-    System.import('ba/lib/dal/aff/googleRemarketing').then(m => {
-      Service = m.default;
-      done();
-    }).catch(err => { console.error(err); });
+    // register mocks and overrides
+    mocks = initMocks();
+    mocks.odl.window.require = sinon.stub().callsArg(1);
+    mocks.odl.window.google_trackConversion = sinon.stub();
+    // load module
+    return setupModule('./src/plugins/googleRemarketing').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   it('should lazy-load the global googleadservices script', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window.require, ['https://www.googleadservices.com/pagead/conversion_async.js']);
+    getJSDOM().changeURL(mocks.odl.window, 'https://example.com/foo');
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window.require, ['https://www.googleadservices.com/pagead/conversion_async.js']);
   });
 
   it('should execute the global tracking function', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.called(window.google_trackConversion);
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.called(mocks.odl.window.google_trackConversion);
   });
 
   it('should define the static globals', () => {
-    new Service(dalApi, dalDataMock, dalConfigMock);
-    sinon.assert.calledWith(window.google_trackConversion, sinon.match({
-      google_conversion_id: dalConfigMock.conversionId,
-      google_conversion_label: dalConfigMock.conversionLabel,
+    new Plugin(odlApi, odlDataMock, odlConfigMock);
+    sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({
+      google_conversion_id: odlConfigMock.conversionId,
+      google_conversion_label: odlConfigMock.conversionLabel,
       google_remarketing_only: true,
       google_conversion_format: 3,
     }));
@@ -55,19 +46,19 @@ describe('ba/lib/dal/aff/googleRemarketing', () => {
 
   describe('google_custom_params:', () => {
     it("should set the correct custom params for the pageType 'homepage'", () => {
-      dalDataMock.page.type = 'homepage';
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(window.google_trackConversion, sinon.match({
+      odlDataMock.page.type = 'homepage';
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({
         google_custom_params: sinon.match({ ecomm_pagetype: 'home' }),
       }));
     });
 
     it("should set the correct custom params for the pageType 'category'", () => {
-      dalDataMock.page.type = 'category';
-      dalDataMock.category =
+      odlDataMock.page.type = 'category';
+      odlDataMock.category =
         { id: '/unit/test/foo' };
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(window.google_trackConversion, sinon.match({
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({
         google_custom_params: sinon.match({
           ecomm_pagetype: 'category',
           ecomm_category: '/unit/test/foo',
@@ -76,27 +67,27 @@ describe('ba/lib/dal/aff/googleRemarketing', () => {
     });
 
     it("should set the correct custom params for the pageType 'product'", () => {
-      dalDataMock.page.type = 'productdetail';
-      dalDataMock.product = dalDataTypes.getDALProductDataStub();
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(window.google_trackConversion, sinon.match({
+      odlDataMock.page.type = 'productdetail';
+      odlDataMock.product = odlDataTypes.getODLProductDataStub();
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({
         google_custom_params: sinon.match({
           ecomm_pagetype: 'product',
-          ecomm_category: dalDataMock.product.category,
-          ecomm_prodid: dalDataMock.product.ean,
-          ecomm_prodname: dalDataMock.product.name,
-          ecomm_totalvalue: dalDataMock.product.priceData.total,
+          ecomm_category: odlDataMock.product.category,
+          ecomm_prodid: odlDataMock.product.ean,
+          ecomm_prodname: odlDataMock.product.name,
+          ecomm_totalvalue: odlDataMock.product.priceData.total,
         }),
       }));
     });
 
     it("should set the correct custom params for the pageType 'checkout-cart'", () => {
-      const p1 = dalDataTypes.getDALProductDataStub(123);
-      const p2 = dalDataTypes.getDALProductDataStub(456);
-      dalDataMock.page.type = 'checkout-cart';
-      dalDataMock.cart = dalDataTypes.getDALCartDataStub([p1, p2]);
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(window.google_trackConversion, sinon.match({
+      const p1 = odlDataTypes.getODLProductDataStub(123);
+      const p2 = odlDataTypes.getODLProductDataStub(456);
+      odlDataMock.page.type = 'checkout-cart';
+      odlDataMock.cart = odlDataTypes.getODLCartDataStub([p1, p2]);
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({
         google_custom_params: sinon.match({
           ecomm_pagetype: 'cart',
           ecomm_category: [p1.category, p2.category],
@@ -111,10 +102,10 @@ describe('ba/lib/dal/aff/googleRemarketing', () => {
       let [purchaseExpectation] = [];
 
       beforeEach(() => {
-        const p1 = dalDataTypes.getDALProductDataStub(123);
-        const p2 = dalDataTypes.getDALProductDataStub(456);
-        dalDataMock.page.type = 'checkout-confirmation';
-        dalDataMock.order = dalDataTypes.getDALOrderDataStub([p1, p2]);
+        const p1 = odlDataTypes.getODLProductDataStub(123);
+        const p2 = odlDataTypes.getODLProductDataStub(456);
+        odlDataMock.page.type = 'checkout-confirmation';
+        odlDataMock.order = odlDataTypes.getODLOrderDataStub([p1, p2]);
         purchaseExpectation = {
           ecomm_pagetype: 'purchase',
           ecomm_category: [p1.category, p2.category],
@@ -125,39 +116,39 @@ describe('ba/lib/dal/aff/googleRemarketing', () => {
       });
 
       it("should set the correct custom params for the pageType 'checkout-confirmation' (no payback, no login)", () => {
-        dalDataMock.order.customer.loginstatus = 'newGuest';
-        dalDataMock.order.paybackPoints = 0;
-        new Service(dalApi, dalDataMock, dalConfigMock);
+        odlDataMock.order.customer.loginstatus = 'newGuest';
+        odlDataMock.order.paybackPoints = 0;
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
         purchaseExpectation.membertype = '0';
         purchaseExpectation.payback = '0';
-        sinon.assert.calledWith(window.google_trackConversion, sinon.match({ google_custom_params: sinon.match(purchaseExpectation) }));
+        sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({ google_custom_params: sinon.match(purchaseExpectation) }));
       });
 
       it("should set the correct custom params for the pageType 'checkout-confirmation' (no payback, with login)", () => {
-        dalDataMock.order.customer.loginstatus = 'registeredCustomer';
-        dalDataMock.order.paybackPoints = 0;
-        new Service(dalApi, dalDataMock, dalConfigMock);
+        odlDataMock.order.customer.loginstatus = 'registeredCustomer';
+        odlDataMock.order.paybackPoints = 0;
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
         purchaseExpectation.membertype = '1';
         purchaseExpectation.payback = '0';
-        sinon.assert.calledWith(window.google_trackConversion, sinon.match({ google_custom_params: sinon.match(purchaseExpectation) }));
+        sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({ google_custom_params: sinon.match(purchaseExpectation) }));
       });
 
       it("should set the correct custom params for the pageType 'checkout-confirmation' (payback, without login)", () => {
-        dalDataMock.order.customer.loginstatus = 'newGuest';
-        dalDataMock.order.paybackPoints = 277;
-        new Service(dalApi, dalDataMock, dalConfigMock);
+        odlDataMock.order.customer.loginstatus = 'newGuest';
+        odlDataMock.order.paybackPoints = 277;
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
         purchaseExpectation.membertype = '0';
         purchaseExpectation.payback = '1';
-        sinon.assert.calledWith(window.google_trackConversion, sinon.match({ google_custom_params: sinon.match(purchaseExpectation) }));
+        sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({ google_custom_params: sinon.match(purchaseExpectation) }));
       });
 
       it("should set the correct custom params for the pageType 'checkout-confirmation' (payback, with login)", () => {
-        dalDataMock.order.customer.loginstatus = 'guestBlargDunnoOrRegisteredCustomer';
-        dalDataMock.order.paybackPoints = 277;
-        new Service(dalApi, dalDataMock, dalConfigMock);
+        odlDataMock.order.customer.loginstatus = 'guestBlargDunnoOrRegisteredCustomer';
+        odlDataMock.order.paybackPoints = 277;
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
         purchaseExpectation.membertype = '1';
         purchaseExpectation.payback = '1';
-        return sinon.assert.calledWith(window.google_trackConversion, sinon.match({ google_custom_params: sinon.match(purchaseExpectation) }));
+        return sinon.assert.calledWith(mocks.odl.window.google_trackConversion, sinon.match({ google_custom_params: sinon.match(purchaseExpectation) }));
       });
     });
   });
