@@ -1,6 +1,6 @@
 import { window, Logger } from 'opendatalayer';
 
-const logger = new Logger('ba/lib/odl/ga2');
+const logger = new Logger('ga');
 
 /**
  * Google Analytics pixel ODL plugin.

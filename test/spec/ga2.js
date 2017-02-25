@@ -1,59 +1,54 @@
-/* eslint-disable no-new */
+/* eslint-disable no-underscore-dangle */
 import { describe, it, beforeEach } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import System from 'systemjs';
-import './../../../../systemjs.config';
-import * as dalDataTypes from './../../../mocks/dalDataTypes';
-import mockModule from './../../_mockModule';
-import domMock from './../../../mocks/domMockES6';
+import * as odlDataTypes from 'opendatalayer-datatype-mocks';
+import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe('ba/lib/dal/ga2', () => {
-  let [windowSpy, loggerSpy, Service, dalApi, dalDataMock, dalConfigMock] = [];
+describe('ga', () => {
+  let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock] = [];
 
-  beforeEach((done) => {
-    windowSpy = domMock;
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy() };
-    windowSpy.ga = sinon.spy(); // custom 'ga' mock to ease tests
-    loggerSpy = { log: sinon.spy(), warn: sinon.spy(), error: sinon.spy() };
-    dalApi = {};
-    dalDataMock = dalDataTypes.getDALGlobalDataStub();
-    dalConfigMock = {
+  beforeEach(() => {
+    odlApi = {};
+    odlDataMock = odlDataTypes.getODLGlobalDataStub();
+    odlConfigMock = {
       gaProdId: 'GA-ID-PROD',
       gaDevId: 'GA-ID-DEV',
       mapPagenamesToEnglish: false,
     };
-    // register mocks
-    mockModule('gk/globals/window', windowSpy);
-    mockModule('gk/lib/logger', () => loggerSpy);
-    // clear module first
-    System.delete(System.normalizeSync('ba/lib/dal/ga2'));
-    System.import('ba/lib/dal/ga2').then((m) => {
-      Service = m.default;
-      done();
-    }).catch((err) => { console.error(err); });
+    // register mocks and overrides
+    mocks = initMocks();
+    mocks.odl.window.ga = sinon.spy();
+    getJSDOM().changeURL(mocks.odl.window, 'https://example.com/foo');
+    // this is required for the parentNode lookup in GA's init call to work (GA
+    // inserts itself right before the first script tag in the document)
+    const s = mocks.odl.window.document.createElement('script');
+    mocks.odl.window.document.getElementsByTagName('head')[0].appendChild(s);
+    // load module
+    return setupModule('./src/plugins/ga2').then(() => {
+      Plugin = getPluginConstructor();
+    });
   });
 
   describe('init:', () => {
-    /* it('should create a global window.ga function', () => {
-      delete windowSpy.ga;
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      assert.isFunction(windowSpy.ga);
+    it('should create a global window.ga function', () => {
+      delete mocks.odl.window.ga;
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      assert.isFunction(mocks.odl.window.ga);
     });
 
     it('should create the GA script element and add it to the DOM', () => {
-      delete windowSpy.ga;
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      const el = windowSpy.getElementsByTagName('HEAD')[0];
-      assert.isDefined(head.childNodes[0]);
-      assert.equal(el.tagName, 'script');
-      assert.equal(el.src, '//www.google-analytics.com/analytics.js');
-    });*/
+      delete mocks.odl.window.ga;
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      const el = mocks.odl.window.document.getElementsByTagName('script')[0];
+      assert.equal(el.tagName.toLowerCase(), 'script');
+      assert.equal(el.src, 'https://www.google-analytics.com/analytics.js');
+    });
 
     it('should pass the base parameters (with the production account) for the site.id [jump_live]', () => {
-      dalDataMock.site.id = 'jump_live';
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'create', dalConfigMock.gaProdId, {
+      odlDataMock.site.id = 'jump_live';
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'create', odlConfigMock.gaProdId, {
         name: 'galeria',
         cookieDomain: 'auto',
         cookieExpires: 6307200,
@@ -62,24 +57,24 @@ describe('ba/lib/dal/ga2', () => {
     });
 
     /* it('should recognize when running in app context and use the supplied clientId from the app bridge in that case', () => {
-      dalDataMock.site.id = 'jump_live';
-      windowSpy.gkh = { ios: { sessionIdentifier: callback => callback(null, { google: '123someclientid' }) } };
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'create', dalConfigMock.gaProdId, sinon.match({ clientId: '123someclientid' }));
-      delete windowSpy.gkh;
+      odlDataMock.site.id = 'jump_live';
+      mocks.odl.window.gkh = { ios: { sessionIdentifier: callback => callback(null, { google: '123someclientid' }) } };
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'create', odlConfigMock.gaProdId, sinon.match({ clientId: '123someclientid' }));
+      delete mocks.odl.window.gkh;
     });
 
     it('should handle errors during clientId lookup when running in app context', () => {
-      dalDataMock.site.id = 'jump_live';
-      windowSpy.gkh = { ios: { sessionIdentifier: callback => callback('someerror') } };
-      new Service(dalApi, dalDataMock, dalConfigMock);
+      odlDataMock.site.id = 'jump_live';
+      mocks.odl.window.gkh = { ios: { sessionIdentifier: callback => callback('someerror') } };
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
       sinon.assert.calledWith(loggerSpy.error, sinon.match('someerror'));
-      delete windowSpy.gkh;
+      delete mocks.odl.window.gkh;
     });*/
 
     it('should pass the base parameters (with dev account) for all other site.ids', () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'create', dalConfigMock.gaDevId, {
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'create', odlConfigMock.gaDevId, {
         name: 'galeria',
         cookieDomain: 'auto',
         cookieExpires: 6307200,
@@ -88,71 +83,71 @@ describe('ba/lib/dal/ga2', () => {
     });
 
     it('should activate IP anonymization', () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', 'anonymizeIp', true);
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', 'anonymizeIp', true);
     });
 
     it('should integrate with doubleclick', () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.require', 'displayfeatures');
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.require', 'displayfeatures');
     });
 
     it('should send a pageview event', () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.send', 'pageview');
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.send', 'pageview');
     });
   });
 
   describe('custom dimensions:', () => {
     it('should send the pagename as [dimension1]', () => {
-      dalDataMock.page.name = 'somepage';
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', { dimension1: 'somepage' });
+      odlDataMock.page.name = 'somepage';
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', { dimension1: 'somepage' });
     });
 
     it('should send the pagename as [dimension1], but without a product id if pagetype is [productdetail]', () => {
-      dalDataMock.page.type = 'productdetail';
-      dalDataMock.page.name = 'someproduct/12345678';
-      dalDataMock.product = dalDataTypes.getDALProductDataStub();
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', { dimension1: 'someproduct' });
+      odlDataMock.page.type = 'productdetail';
+      odlDataMock.page.name = 'someproduct/12345678';
+      odlDataMock.product = odlDataTypes.getODLProductDataStub();
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', { dimension1: 'someproduct' });
     });
 
     it('should translate the "Produkt" part of the article detail pagename if [mapPagenamesToEnglish] is set to true in config', () => {
-      dalDataMock.page.type = 'foo';
-      dalDataMock.page.name = 'Produkt/12345678';
-      dalConfigMock.mapPagenamesToEnglish = true;
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', { dimension1: 'product/12345678' });
+      odlDataMock.page.type = 'foo';
+      odlDataMock.page.name = 'Produkt/12345678';
+      odlConfigMock.mapPagenamesToEnglish = true;
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', { dimension1: 'product/12345678' });
     });
 
     it('should translate (and lowercase) the pagename if [mapPagenamesToEnglish] is set to true in config', () => {
-      dalDataMock.page.type = 'foo';
-      dalDataMock.page.name = 'Startseite';
-      dalConfigMock.mapPagenamesToEnglish = true;
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', { dimension1: 'homepage' });
+      odlDataMock.page.type = 'foo';
+      odlDataMock.page.name = 'Startseite';
+      odlConfigMock.mapPagenamesToEnglish = true;
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', { dimension1: 'homepage' });
     });
 
     it("should send the escaped UserAgent string as 'dimension2'", () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', {
-        dimension2: escape(windowSpy.navigator.userAgent),
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', {
+        dimension2: escape(mocks.odl.window.navigator.userAgent),
       });
     });
 
     it('should automatically lowercase strings that get passed as dimension value', () => {
-      const s = new Service(dalApi, dalDataMock, dalConfigMock);
+      const s = new Plugin(odlApi, odlDataMock, odlConfigMock);
       s.trackDimension('test', 'My String');
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', { test: 'my string' });
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', { test: 'my string' });
     });
   });
 
   describe('campaign:', () => {
     it('should recognize common campaign parameters in the URL and track them', () => {
-      windowSpy.location = { search: '?emsrc=somemedium&refId=somesource/campid' };
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', {
+      getJSDOM().changeURL(mocks.odl.window, 'file:///someurl.foo?emsrc=somemedium&refId=somesource/campid');
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', {
         campaignName: 'campid',
         campaignSource: 'somesource',
         campaignMedium: 'somemedium',
@@ -160,9 +155,9 @@ describe('ba/lib/dal/ga2', () => {
     });
 
     it('should recognize campaign parameters with just a single value in refId in the URL and track them', () => {
-      windowSpy.location = { search: '?emsrc=somemedium&refId=somesource' };
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', {
+      getJSDOM().changeURL(mocks.odl.window, 'file:///someurl.foo?emsrc=somemedium&refId=somesource');
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', {
         campaignName: 'somesource',
         campaignSource: 'somesource',
         campaignMedium: 'somemedium',
@@ -170,9 +165,9 @@ describe('ba/lib/dal/ga2', () => {
     });
 
     it('should recognize newsletter campaign parameters in the URL and track them', () => {
-      windowSpy.location = { search: '?newsletter=newsletterbla/test2016' };
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', {
+      getJSDOM().changeURL(mocks.odl.window, 'file:///someurl.foo?newsletter=newsletterbla/test2016');
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', {
         campaignName: 'test2016',
         campaignSource: 'newsletterbla',
         campaignMedium: 'newsletter',
@@ -180,9 +175,9 @@ describe('ba/lib/dal/ga2', () => {
     });
 
     it('should properly unescape newsletter campaign parameters in the URL and track them', () => {
-      windowSpy.location = { search: '?newsletter=newsletterbla%2Ftest2016' };
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.calledWith(windowSpy.ga, 'galeria.set', {
+      getJSDOM().changeURL(mocks.odl.window, 'file:///someurl.foo?newsletter=newsletterbla%2Ftest2016');
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', {
         campaignName: 'test2016',
         campaignSource: 'newsletterbla',
         campaignMedium: 'newsletter',
@@ -191,7 +186,7 @@ describe('ba/lib/dal/ga2', () => {
   });
 
   describe('ecommerce:', () => {
-    // helper to create an expectation (GA format) from a mock (DALProductData)
+    // helper to create an expectation (GA format) from a mock (ODLProductData)
     const createExpectationFromProduct = (product, quantity = 1, coupon = '') =>
       ({
         id: product.ean,
@@ -205,47 +200,47 @@ describe('ba/lib/dal/ga2', () => {
       });
 
     it('should NOT load the e-commerce plugin for each page', () => {
-      new Service(dalApi, dalDataMock, dalConfigMock);
-      sinon.assert.neverCalledWith(windowSpy.ga, 'galeria.require', 'ec');
+      new Plugin(odlApi, odlDataMock, odlConfigMock);
+      sinon.assert.neverCalledWith(mocks.odl.window.ga, 'galeria.require', 'ec');
     });
 
     describe('category:', () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'category';
-        dalDataMock.category = dalDataTypes.getDALCategoryDataStub();
+        odlDataMock.page.type = 'category';
+        odlDataMock.category = odlDataTypes.getODLCategoryDataStub();
       });
 
       it('should override the pageName with the category id', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.set', { dimension1: dalDataMock.category.id });
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.set', { dimension1: odlDataMock.category.id });
       });
     });
 
     describe('productdetail:', () => {
       beforeEach(() => {
-        dalDataMock.page.type = 'productdetail';
-        dalDataMock.product = dalDataTypes.getDALProductDataStub();
+        odlDataMock.page.type = 'productdetail';
+        odlDataMock.product = odlDataTypes.getODLProductDataStub();
       }); // productsMock[0]
 
       it('should load the e-commerce plugin for pagetype [productdetail]', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.require', 'ec');
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.require', 'ec');
       });
 
       it('should add the current product and track a [detail] action', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:addProduct', createExpectationFromProduct(dalDataMock.product));
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:setAction', 'detail');
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:addProduct', createExpectationFromProduct(odlDataMock.product));
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:setAction', 'detail');
       });
 
       describe('addtocart:', () =>
-        it('should add the given product and track a [add] action when receiving an addtocart event from DAL', () => {
-          const p = dalDataTypes.getDALProductDataStub(23456);
-          const s = new Service(dalApi, dalDataMock, dalConfigMock);
+        it('should add the given product and track a [add] action when receiving an addtocart event from ODL', () => {
+          const p = odlDataTypes.getODLProductDataStub(23456);
+          const s = new Plugin(odlApi, odlDataMock, odlConfigMock);
           s.handleEvent('addtocart', { product: p }); // important: we intentionally add another product than on view to simulate multiple variants
-          sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:addProduct', createExpectationFromProduct(p));
-          sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:setAction', 'add');
-          sinon.assert.calledWith(windowSpy.ga, 'galeria.send', 'event', 'UX', 'click', 'add to cart');
+          sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:addProduct', createExpectationFromProduct(p));
+          sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:setAction', 'add');
+          sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.send', 'event', 'UX', 'click', 'add to cart');
         }));
     });
 
@@ -253,49 +248,49 @@ describe('ba/lib/dal/ga2', () => {
       let [cart] = [];
 
       beforeEach(() => {
-        cart = dalDataTypes.getDALCartDataStub([dalDataTypes.getDALCartProductDataStub(123), dalDataTypes.getDALCartProductDataStub(234)]);
-        dalDataMock.page.type = 'checkout-cart';
-        dalDataMock.cart = cart;
+        cart = odlDataTypes.getODLCartDataStub([odlDataTypes.getODLCartProductDataStub(123), odlDataTypes.getODLCartProductDataStub(234)]);
+        odlDataMock.page.type = 'checkout-cart';
+        odlDataMock.cart = cart;
       });
 
       it('should load the e-commerce plugin for pagetype [checkout-cart]', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.require', 'ec');
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.require', 'ec');
       });
 
       it('should add all products from the cart and track the correct [checkout] action', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:addProduct', createExpectationFromProduct(cart.products[0]));
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:addProduct', createExpectationFromProduct(cart.products[1]));
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:setAction', 'checkout', { 'step': 1 });
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:addProduct', createExpectationFromProduct(cart.products[0]));
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:addProduct', createExpectationFromProduct(cart.products[1]));
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:setAction', 'checkout', { 'step': 1 });
       });
     });
 
     describe('checkout-login:', () => {
-      beforeEach(() => dalDataMock.page.type = 'checkout-login');
+      beforeEach(() => odlDataMock.page.type = 'checkout-login');
 
       it('should load the e-commerce plugin for pagetype [checkout-login]', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.require', 'ec');
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.require', 'ec');
       });
 
       it('should track the correct [checkout] action', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:setAction', 'checkout', { step: 2 });
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:setAction', 'checkout', { step: 2 });
       });
     });
 
     describe('checkout-lastCheck:', () => {
-      beforeEach(() => (dalDataMock.page.type = 'checkout-lastCheck'));
+      beforeEach(() => (odlDataMock.page.type = 'checkout-lastCheck'));
 
       it('should load the e-commerce plugin for pagetype [checkout-lastCheck]', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.require', 'ec');
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.require', 'ec');
       });
 
       it('should track the correct [checkout] action', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:setAction', 'checkout', { step: 3 });
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:setAction', 'checkout', { step: 3 });
       });
     });
 
@@ -303,22 +298,22 @@ describe('ba/lib/dal/ga2', () => {
       let [order] = [];
 
       beforeEach(() => {
-        // create individual order for this single test run and add it to DAL data mock
-        order = dalDataTypes.getDALOrderDataStub([dalDataTypes.getDALCartProductDataStub(123), dalDataTypes.getDALCartProductDataStub(234)]);
-        dalDataMock.page.type = 'checkout-confirmation';
-        dalDataMock.order = order;
+        // create individual order for this single test run and add it to ODL data mock
+        order = odlDataTypes.getODLOrderDataStub([odlDataTypes.getODLCartProductDataStub(123), odlDataTypes.getODLCartProductDataStub(234)]);
+        odlDataMock.page.type = 'checkout-confirmation';
+        odlDataMock.order = order;
       });
 
       it('should load the e-commerce plugin for pagetype [checkout-confirmation]', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.require', 'ec');
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.require', 'ec');
       });
 
       it('should add all products from the current order and track a [purchase] action', () => {
-        new Service(dalApi, dalDataMock, dalConfigMock);
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:addProduct', createExpectationFromProduct(order.products[0]));
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:addProduct', createExpectationFromProduct(order.products[1]));
-        sinon.assert.calledWith(windowSpy.ga, 'galeria.ec:setAction', 'purchase', {
+        new Plugin(odlApi, odlDataMock, odlConfigMock);
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:addProduct', createExpectationFromProduct(order.products[0]));
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:addProduct', createExpectationFromProduct(order.products[1]));
+        sinon.assert.calledWith(mocks.odl.window.ga, 'galeria.ec:setAction', 'purchase', {
           id: order.id,
           affiliation: '',
           revenue: order.priceData.total,
