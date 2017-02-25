@@ -25,7 +25,7 @@ describe('ga', () => {
     const s = mocks.odl.window.document.createElement('script');
     mocks.odl.window.document.getElementsByTagName('head')[0].appendChild(s);
     // load module
-    return setupModule('./src/plugins/ga2').then(() => {
+    return setupModule('./src/plugins/ga').then(() => {
       Plugin = getPluginConstructor();
     });
   });
