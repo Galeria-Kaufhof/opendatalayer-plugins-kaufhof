@@ -54,8 +54,8 @@ export default class BSNA {
     logger.log(`event '${name}' caught`);
     switch (name) {
       case 'initialize': {
-        const navigationData = data.navigation ? data.navigation : {entries: []};
-        const pageLoad = rumba.BAPageLoadEvent.create(data.page.type, data.page.name, 'FIXME:mediaQuery', navigationData);
+        const navigationData = data.navigation ? data.navigation : { entries: [] };
+        const pageLoad = rumba.BAPageLoadEvent.create(data.page.type, data.page.name, data.kaufhof.breakpoint, navigationData);
         switch (data.page.type) {
           case 'productdetail': {
             pageLoad.product = this.rumbaProductFromODLProductData(data.product);
@@ -111,8 +111,7 @@ export default class BSNA {
       product.variantId,
       product.ean,
       product.aonr,
-      this.rumbaBrandFromODLBrandData(product.brandData),
-    );
+      this.rumbaBrandFromODLBrandData(product.brandData));
   }
 
   /**

@@ -49,6 +49,7 @@ describe('opendatalayer-plugins-kaufhof/bsna', () => {
     storageMock.getItem.returns('');
     odlDataMock = odlDataTypes.getODLGlobalDataStub();
     odlDataMock.identity = { bid: 'somefancybid123' };
+    odlDataMock.kaufhof = { breakpoint: 'S_to_XXL' };
     odlConfigMock = { backend: '/bla/blubb' };
     // register mocks
     mocks = initMocks({ './src/lib/rumba': rumbaMock });
