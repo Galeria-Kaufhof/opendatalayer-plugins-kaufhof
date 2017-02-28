@@ -196,7 +196,7 @@ export default class Econda {
     };
 
     // pass custom dimensions
-    // @FIXME: o.breakpointc = mediaQuery.currentRange;  // https://jira.gkh-setu.de/browse/BSNA-1069
+    o.breakpointc = this.data.kaufhof ? this.data.kaufhof.breakpoint : '';  // https://jira.gkh-setu.de/browse/BSNA-1069
     o.status = this.data.user && this.data.user.id ? 'loggedIn' : 'notLoggedIn';  // https://jira.gkh-setu.de/browse/BSNA-1068
 
     // app case: see https://jira.gkh-setu.de/browse/BSNA-797 for details

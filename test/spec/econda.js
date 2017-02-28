@@ -171,9 +171,10 @@ describe('opendatalayer-plugins-kaufhof/econda', () => {
 
   describe('custom dimensions', () => {
     it('should track the correct breakpoint class using the [breakpointc] dimension', () => {
+      odlDataMock.kaufhof = { breakpoint: 'S_to_XXL' };
       callPlugin();
       sinon.assert.calledWith(mocks.odl.window.emosPropertiesEvent, sinon.match({
-        breakpointc: mediaQueryMock.currentRange,
+        breakpointc: odlDataMock.kaufhof.breakpoint,
       }));
     });
 
