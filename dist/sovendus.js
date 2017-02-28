@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _opendatalayer = require('opendatalayer');
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 /**
  * Sovendus ODL plugin
  *
@@ -14,7 +16,7 @@ var _opendatalayer = require('opendatalayer');
  * @implements  IODLService
  */
 var Sovendus = function Sovendus(odl, data, config) {
-  babelHelpers.classCallCheck(this, Sovendus);
+  _classCallCheck(this, Sovendus);
 
   if (data.page.type === 'checkout-confirmation') {
     // create target element in container on confirmation page

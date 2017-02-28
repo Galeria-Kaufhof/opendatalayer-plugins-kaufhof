@@ -4,7 +4,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _opendatalayer = require('opendatalayer');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var logger = new _opendatalayer.Logger('ga');
 
@@ -14,7 +18,7 @@ var logger = new _opendatalayer.Logger('ga');
 
 var GoogleAnalytics2 = function () {
   function GoogleAnalytics2(odl, data, config) {
-    babelHelpers.classCallCheck(this, GoogleAnalytics2);
+    _classCallCheck(this, GoogleAnalytics2);
 
     logger.log('initialize', config);
     this.config = config;
@@ -37,7 +41,7 @@ var GoogleAnalytics2 = function () {
   // Initialize GA tracking
 
 
-  babelHelpers.createClass(GoogleAnalytics2, [{
+  _createClass(GoogleAnalytics2, [{
     key: 'initGA',
     value: function initGA(data, config) {
       var clientId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
@@ -242,6 +246,7 @@ var GoogleAnalytics2 = function () {
       return name;
     }
   }]);
+
   return GoogleAnalytics2;
 }();
 

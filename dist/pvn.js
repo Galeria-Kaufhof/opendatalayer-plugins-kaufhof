@@ -8,7 +8,11 @@ var _opendatalayer = require('opendatalayer');
 
 var _jquery = require('jquery');
 
-var _jquery2 = babelHelpers.interopRequireDefault(_jquery);
+var _jquery2 = _interopRequireDefault(_jquery);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var logger = new _opendatalayer.Logger('PVN');
 
@@ -17,7 +21,7 @@ var logger = new _opendatalayer.Logger('PVN');
  */
 
 var PVN = function PVN(odl, data, config) {
-  babelHelpers.classCallCheck(this, PVN);
+  _classCallCheck(this, PVN);
 
   logger.log('initialize');
 

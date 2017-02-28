@@ -6,12 +6,14 @@ Object.defineProperty(exports, "__esModule", {
 
 var _opendatalayer = require('opendatalayer');
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /* eslint-disable no-underscore-dangle */
+
+
 var logger = new _opendatalayer.Logger('tharuka');
 
 /**
  * Tharuka ODL plugin
  */
-/* eslint-disable no-underscore-dangle */
 
 var Tharuka =
 
@@ -24,7 +26,7 @@ var Tharuka =
  * @param  {Object}  config  custom configuration for this service
  */
 function Tharuka(odl, data, config) {
-  babelHelpers.classCallCheck(this, Tharuka);
+  _classCallCheck(this, Tharuka);
 
   var ordr = data.order;
   var cus = ordr.customer;

@@ -4,7 +4,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _opendatalayer = require('opendatalayer');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var logger = new _opendatalayer.Logger('ba/lib/odl/aff/facebookWCA');
 
@@ -15,7 +19,7 @@ var logger = new _opendatalayer.Logger('ba/lib/odl/aff/facebookWCA');
 
 var FacebookWCA = function () {
   function FacebookWCA(odl, data, config) {
-    babelHelpers.classCallCheck(this, FacebookWCA);
+    _classCallCheck(this, FacebookWCA);
 
     // load FB pixel and append it to DOM
     if (!_opendatalayer.window._fbq) {
@@ -64,7 +68,7 @@ var FacebookWCA = function () {
   // handle async event
 
 
-  babelHelpers.createClass(FacebookWCA, [{
+  _createClass(FacebookWCA, [{
     key: 'handleEvent',
     value: function handleEvent(name, data) {
       if (data.product != null) {
@@ -103,6 +107,7 @@ var FacebookWCA = function () {
       });
     }
   }]);
+
   return FacebookWCA;
 }();
 

@@ -8,7 +8,11 @@ var _opendatalayer = require('opendatalayer');
 
 var _A3320_tracking = require('./../lib/A3320_tracking');
 
-var _A3320_tracking2 = babelHelpers.interopRequireDefault(_A3320_tracking);
+var _A3320_tracking2 = _interopRequireDefault(_A3320_tracking);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var logger = new _opendatalayer.Logger('psm');
 
@@ -17,7 +21,7 @@ var logger = new _opendatalayer.Logger('psm');
  */
 
 var PSM = function PSM(odl, data, config) {
-  babelHelpers.classCallCheck(this, PSM);
+  _classCallCheck(this, PSM);
 
   logger.log('initialize');
 

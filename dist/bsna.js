@@ -4,11 +4,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+// import mediaQuery from 'gk/lib/mediaQuery';
+
+
 var _opendatalayer = require('opendatalayer');
 
 var _rumba = require('./../lib/rumba');
 
-var _rumba2 = babelHelpers.interopRequireDefault(_rumba);
+var _rumba2 = _interopRequireDefault(_rumba);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var logger = new _opendatalayer.Logger('bsna');
 
@@ -20,8 +28,6 @@ var logger = new _opendatalayer.Logger('bsna');
  * see http://gitlab.gkh-setu.de/specs/jumprfc-018-analytics/blob/master/jumprfc-018-analytics.md
  */
 
-// import mediaQuery from 'gk/lib/mediaQuery';
-
 var BSNA = function () {
 
   /**
@@ -32,7 +38,7 @@ var BSNA = function () {
    * @param  {Object}      config  custom configuration for this service
    */
   function BSNA(odl, data, config) {
-    babelHelpers.classCallCheck(this, BSNA);
+    _classCallCheck(this, BSNA);
 
     logger.log('initialize');
     this.optedOut = _opendatalayer.window.localStorage.getItem('ba:optout') === '1';
@@ -62,7 +68,7 @@ var BSNA = function () {
    */
 
 
-  babelHelpers.createClass(BSNA, [{
+  _createClass(BSNA, [{
     key: 'handleEvent',
     value: function handleEvent(name, data) {
       var _this = this;
@@ -75,7 +81,7 @@ var BSNA = function () {
         case 'initialize':
           {
             var navigationData = data.navigation ? data.navigation : { entries: [] };
-            var pageLoad = _rumba2.default.BAPageLoadEvent.create(data.page.type, data.page.name, 'FIXME:mediaQuery', navigationData);
+            var pageLoad = _rumba2.default.BAPageLoadEvent.create(data.page.type, data.page.name, data.kaufhof.breakpoint, navigationData);
             switch (data.page.type) {
               case 'productdetail':
                 {
@@ -150,6 +156,7 @@ var BSNA = function () {
       return _rumba2.default.BABrand.create(brand.name, brand.brandKey, brand.lineKey);
     }
   }]);
+
   return BSNA;
 }();
 

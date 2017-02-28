@@ -4,7 +4,12 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* eslint-disable new-cap */
+
+
 var _opendatalayer = require('opendatalayer');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 // import $ from 'jquery';
 // import '//media.richrelevance.com/rrserver/js/1.0/p13n.js';
@@ -17,7 +22,6 @@ var logger = new _opendatalayer.Logger('richrelevance');
  * ODL service plugin for embedding richrelevance into the page. Also responsible for
  * replacing gk:recommendation meta tags with actual recommendation markup.
  */
-/* eslint-disable new-cap */
 
 var Richrelevance = function () {
 
@@ -32,7 +36,7 @@ var Richrelevance = function () {
   function Richrelevance(odl, data, config) {
     var _this = this;
 
-    babelHelpers.classCallCheck(this, Richrelevance);
+    _classCallCheck(this, Richrelevance);
 
     this.odl = odl;
     this.data = data;
@@ -168,7 +172,7 @@ var Richrelevance = function () {
    */
 
 
-  babelHelpers.createClass(Richrelevance, [{
+  _createClass(Richrelevance, [{
     key: '_initCommon',
     value: function _initCommon() {
       if (_opendatalayer.window.r3_common === undefined) {
@@ -300,6 +304,7 @@ var Richrelevance = function () {
       });*/
     }
   }]);
+
   return Richrelevance;
 }();
 

@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _opendatalayer = require('opendatalayer');
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var logger = new _opendatalayer.Logger('opendatalayer-plugins-kaufhof/adnymics');
 
 /**
@@ -13,7 +15,7 @@ var logger = new _opendatalayer.Logger('opendatalayer-plugins-kaufhof/adnymics')
  */
 
 var Adnymics = function Adnymics(odl, data, config) {
-  babelHelpers.classCallCheck(this, Adnymics);
+  _classCallCheck(this, Adnymics);
 
   logger.log('initialize');
 

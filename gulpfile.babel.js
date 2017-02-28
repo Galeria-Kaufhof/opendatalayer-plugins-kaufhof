@@ -7,8 +7,8 @@ gulp.task('build', () => {
   // transpile sources into ./dist
   gulp.src('./src/plugins/*.js')
     .pipe(babel({
-      presets: ["es2015"],
-      plugins: "external-helpers"
+      presets: ['es2015'],
+      // plugins: ['external-helpers', {}],
     }))
     .pipe(gulp.dest('dist'));
 });

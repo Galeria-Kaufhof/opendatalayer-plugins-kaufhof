@@ -4,7 +4,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _opendatalayer = require('opendatalayer');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var logger = new _opendatalayer.Logger('criteo');
 
@@ -14,7 +18,7 @@ var logger = new _opendatalayer.Logger('criteo');
 
 var Criteo = function () {
   function Criteo(odl, data, config) {
-    babelHelpers.classCallCheck(this, Criteo);
+    _classCallCheck(this, Criteo);
 
     // append script to DOM
     var el = _opendatalayer.window.document.createElement('script');
@@ -64,7 +68,7 @@ var Criteo = function () {
   // get product items from a ODLCartData object the way criteo needs it
 
 
-  babelHelpers.createClass(Criteo, [{
+  _createClass(Criteo, [{
     key: 'getProductItems',
     value: function getProductItems(data) {
       var items = [];
@@ -91,6 +95,7 @@ var Criteo = function () {
       return _opendatalayer.window.criteo_q.push(eventObj);
     }
   }]);
+
   return Criteo;
 }();
 

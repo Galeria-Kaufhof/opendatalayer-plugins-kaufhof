@@ -4,7 +4,12 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* eslint-disable no-underscore-dangle, no-bitwise, max-len */
+
+
 var _opendatalayer = require('opendatalayer');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /* eslint-disable no-underscore-dangle, no-bitwise, max-len */
 // @TODO import mq from 'gk/lib/mediaQuery';
@@ -22,7 +27,6 @@ var _opendatalayer = require('opendatalayer');
 var logger = new _opendatalayer.Logger('stacy');
 
 // provide ODL data to metrics
-/* eslint-disable no-underscore-dangle, no-bitwise, max-len */
 var _odlData = {};
 
 // stacy metric for fint-specific KPIs
@@ -62,7 +66,7 @@ var Stacy = function () {
    * @param  {Object}      config  custom configuration for this service
    */
   function Stacy(odl, data, config) {
-    babelHelpers.classCallCheck(this, Stacy);
+    _classCallCheck(this, Stacy);
 
     this._onPostData = this._onPostData.bind(this);
     this.odl = odl;
@@ -88,7 +92,7 @@ var Stacy = function () {
    */
 
 
-  babelHelpers.createClass(Stacy, [{
+  _createClass(Stacy, [{
     key: 'handleEvent',
     value: function handleEvent(name, data, domain) {}
     // pass log event to stacy
@@ -141,6 +145,7 @@ var Stacy = function () {
       }
     }
   }]);
+
   return Stacy;
 }();
 

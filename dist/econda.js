@@ -4,9 +4,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _opendatalayer = require('opendatalayer');
 
 require('../lib/econda');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 // TODO: fix mediaQuery dep
 // import mediaQuery from 'gk/lib/mediaQuery';
@@ -33,7 +37,7 @@ var Econda = function () {
   function Econda(odl, data, config) {
     var _this = this;
 
-    babelHelpers.classCallCheck(this, Econda);
+    _classCallCheck(this, Econda);
 
     this.odl = odl;
     this.data = data;
@@ -72,7 +76,7 @@ var Econda = function () {
    */
 
 
-  babelHelpers.createClass(Econda, [{
+  _createClass(Econda, [{
     key: 'initEconda',
     value: function initEconda(data, config) {
       var visitorId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
@@ -179,7 +183,7 @@ var Econda = function () {
       };
 
       // pass custom dimensions
-      // @FIXME: o.breakpointc = mediaQuery.currentRange;  // https://jira.gkh-setu.de/browse/BSNA-1069
+      o.breakpointc = this.data.kaufhof ? this.data.kaufhof.breakpoint : ''; // https://jira.gkh-setu.de/browse/BSNA-1069
       o.status = this.data.user && this.data.user.id ? 'loggedIn' : 'notLoggedIn'; // https://jira.gkh-setu.de/browse/BSNA-1068
 
       // app case: see https://jira.gkh-setu.de/browse/BSNA-797 for details
@@ -394,6 +398,7 @@ var Econda = function () {
       _opendatalayer.window.document.cookie = name + '=' + value + ';';
     }
   }]);
+
   return Econda;
 }();
 

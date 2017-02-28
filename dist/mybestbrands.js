@@ -4,7 +4,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _opendatalayer = require('opendatalayer');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var logger = new _opendatalayer.Logger('mybestbrands');
 
@@ -20,7 +24,7 @@ var logger = new _opendatalayer.Logger('mybestbrands');
  */
 
 var MyBestBrands = function MyBestBrands(odl, data, config) {
-  babelHelpers.classCallCheck(this, MyBestBrands);
+  _classCallCheck(this, MyBestBrands);
 
   logger.log('initialize');
 
@@ -99,7 +103,7 @@ var MyBestBrands = function MyBestBrands(odl, data, config) {
       var d = new Date();var t = d.getTime();return t;
     };im = function im(s) {
       if (document.images) {
-        if ((typeof ia === 'undefined' ? 'undefined' : babelHelpers.typeof(ia)) != "object") {
+        if ((typeof ia === 'undefined' ? 'undefined' : _typeof(ia)) != "object") {
           var ia = new Array();
         };var i = ia.length;ia[i] = new Image();ia[i].src = s;ia[i].onload = function () {};
       } else {

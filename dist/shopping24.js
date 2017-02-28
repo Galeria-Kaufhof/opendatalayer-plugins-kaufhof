@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _opendatalayer = require('opendatalayer');
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var logger = new _opendatalayer.Logger('shopping24');
 
 /**
@@ -13,7 +15,7 @@ var logger = new _opendatalayer.Logger('shopping24');
  */
 
 var Shopping24 = function Shopping24(odl, data, config) {
-  babelHelpers.classCallCheck(this, Shopping24);
+  _classCallCheck(this, Shopping24);
 
   logger.log('initialize');
 
