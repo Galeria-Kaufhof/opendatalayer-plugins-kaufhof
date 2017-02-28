@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
 import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe "ba/lib/odl/bt/mybestbrands", ->
+describe "mybestbrands", ->
   [injector, window, service, odlApi, odlDataMock, odlConfigMock, p1, p2, p3] = []
 
   beforeEach (done) ->

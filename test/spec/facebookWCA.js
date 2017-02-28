@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
 import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/odl/aff/facebookWCA', () => {
+describe('facebookWCA', () => {
   let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock] = [];
 
   beforeEach(() => {

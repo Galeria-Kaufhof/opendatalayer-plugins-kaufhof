@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
 import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('opendatalayer-plugins-kaufhof/adnymics', () => {
+describe('adnymics', () => {
   let [Plugin, mocks, odlDataMock, odlConfigMock] = [];
 
   beforeEach(() => {

@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
 import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe('opendatalayer-plugins-kaufhof/bsna', () => {
+describe('bsna', () => {
   let [Plugin, mocks, odlApi, odlDataMock, odlConfigMock, rumbaMock, storageMock] = [];
 
   beforeEach(() => {

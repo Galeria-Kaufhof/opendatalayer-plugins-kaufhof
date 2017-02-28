@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
 import { setupModule, getPluginConstructor, initMocks } from './../_testHelper';
 
-describe('ba/lib/odl/bt/ladenzeile', () => {
+describe('ladenzeile', () => {
   let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock, p1, p2, p3] = [];
 
   beforeEach(() => {

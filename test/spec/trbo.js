@@ -4,12 +4,11 @@ import * as sinon from 'sinon';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
 import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe('ba/lib/odl/trbo', () => {
-  let [mocks, odlApi, odlDataMock, odlConfigMock, gkConfigMock, Plugin] = [];
+describe('trbo', () => {
+  let [mocks, odlApi, odlDataMock, odlConfigMock, Plugin] = [];
 
   beforeEach(() => {
     // mock data
-    gkConfigMock = { isAppContext: false, focMode: 0 };
     odlApi = {};
     odlDataMock = odlDataTypes.getODLGlobalDataStub();
     odlDataMock.order = odlDataTypes.getODLOrderDataStub();

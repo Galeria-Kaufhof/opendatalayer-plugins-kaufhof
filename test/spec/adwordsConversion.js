@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import * as odlDataTypes from 'opendatalayer-datatype-mocks';
 import { setupModule, getPluginConstructor, initMocks, getJSDOM } from './../_testHelper';
 
-describe('opendatalayer-plugins-kaufhof/adwordsConversion', () => {
+describe('adwordsConversion', () => {
   let [mocks, Plugin, odlApi, odlDataMock, odlConfigMock] = [];
 
   beforeEach(() => {
