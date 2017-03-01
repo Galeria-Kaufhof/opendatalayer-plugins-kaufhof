@@ -1,10 +1,10 @@
 # Kaufhof plugins for OpenDataLayer
-Collection of more or less Kaufhof-specific plugins for the [OpenDatalayer](). Most of them using very special attributes
-that are not universally applicable. Before they can become universal ODL plugins we need to sort out
-the issues and make them more generalized.
+Collection of more or less Kaufhof-specific plugins for the [OpenDatalayer](https://github.com/ryx/opendatalayer).
+Most of them using very special attributes that are not universally applicable. Before they can become universal
+ODL plugins we need to sort out the issues and make them more generalized.
 
 ## Usage
-The plugins should be used together with ODL Builder. Install them as a local npm dependency.
+The plugins should be used together with [ODL Builder](https://github.com/ryx/opendatalayer). Install them as a local npm dependency.
 
     npm install opendatalayer-plugins-kaufhof --save-dev
 
