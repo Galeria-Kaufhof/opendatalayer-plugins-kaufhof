@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Galeria-Kaufhof/opendatalayer-plugins-kaufhof.svg?branch=master)](https://travis-ci.org/Galeria-Kaufhof/opendatalayer-plugins-kaufhof)
+
 # Kaufhof plugins for the OpenDatalayer framework
 Collection of more or less Kaufhof-specific plugins for the [OpenDatalayer](https://github.com/ryx/opendatalayer).
 Most of them using very special attributes that are not universally applicable. Before they can become universal
